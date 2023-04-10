@@ -14,7 +14,7 @@ pub fn tokenize(reader: impl BufRead) -> Vec<Token> {
         // numbers
         r"-?\d+(\.\d*)?(/\d+(\.\d*)?)",
         // strings
-        "\"(\\.|[^\"])\"",
+        "\"(\\.|[^\"])*\"",
         // alphanumeric identifiers
         r"[a-zA-Z0-9_]+",
         // symbolic identifier
