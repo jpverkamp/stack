@@ -1,0 +1,19 @@
+{ "hello" }
+{ "goodbye" }
+1 2 < if
+writeln
+
+{ "hello" }
+{ "goodbye" }
+1 2 > if
+writeln
+
+"hello"
+{ "goodbye" }
+1 2 < if
+writeln
+
+"hello"
+"goodbye"
+1 2 > if
+writeln
