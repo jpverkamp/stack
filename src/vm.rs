@@ -22,10 +22,10 @@ macro_rules! numeric_binop {
 
 /// Evaluates a vector of expressions
 /// This does not actually return anything, but instead mutates the stack
-pub fn evaluate(ast: Vec<Expression>) {
+pub fn evaluate(ast: Expression) {
     // Internal eval function, carries the stack with it and mutates it
     fn eval(node: Expression, stack: &mut Stack) {
-        log::debug!("eval({node:?}, {stack:?})");
+        log::debug!("eval({node}, {stack})");
 
         // Cloned for debug printing
         match node.clone() {
@@ -38,22 +38,68 @@ pub fn evaluate(ast: Vec<Expression>) {
                 "/" => numeric_binop!(stack, |a, b| { a / b }),
                 "%" => numeric_binop!(stack, |a, b| { a % b }),
                 "writeln" => {
-                    println!("{:?}", stack.pop().unwrap());
-                }
-                _ => todo!(), // TODO: named expressions
+                    println!("{}", stack.pop().unwrap());
+                },
+                name => {
+                    if let Some(value) = stack.get_named(String::from(name)) {
+                        if let Value::Block { arity_in, arity_out, expression } = value {
+                            // Extend the stack with arity_in values
+                            let mut substack = stack.extend(arity_in);                           
+                            log::debug!("substack: {}", substack);
+
+                            // Evaluate the block with that new stack context
+                            eval(expression.as_ref().clone(), &mut substack);
+                            log::debug!("substack after eval: {}", substack);
+                            
+                            // Copy arity_out values to return, drop the rest of the substack
+                            // TODO: should this be a stack method?
+                            let mut results = vec![];
+                            for _ in 0..arity_out {
+                                results.push(substack.pop())
+                            }
+
+                            for result in results {
+                                stack.push(result.unwrap());
+                            }
+                        } else {
+                            stack.push(value);
+                        }
+                    } else {
+                        panic!("Unknown identifier {:?}", name);
+                    }
+                },
             },
             // Literal values are just pushed onto the stack
             Expression::Literal(value) => stack.push(value.clone()),
-            // TODO: Blocks are parsed into block values, arity is calculated here
-            Expression::Block(_) => {}
+            // Blocks are parsed into block values, arity is calculated here
+            Expression::Block(children) => {
+                // TODO: Actually calculate arity
+                stack.push(Value::Block {
+                    arity_in: 1,
+                    arity_out: 1,
+                    expression: Box::new(Expression::Group(children)),
+                });
+            }
             // TODO: Lists shouldn't currently be directly called
             // TODO: This could be list expressions
             Expression::List(_) => todo!(),
             // TODO: Groups evaluate their children one at a time
-            Expression::Group(_) => todo!(),
+            Expression::Group(children) => {
+                for node in children {
+                    eval(node, stack);
+                }
+            },
             // @ expressions name the top value on the stack
             // @[] expressions name multiple values
-            Expression::At(_) => todo!(),
+            Expression::At(subnode) => {
+                match subnode.as_ref() {
+                    Expression::Identifier(name) => {
+                        stack.name(name.clone());
+                    },
+                    Expression::List(_) => todo!(),
+                    _ => panic!("Invalid @ expression, must be @name or @[list], got {:?}", node)
+                }
+            },
             // ! expressions set (or update) the value of named expressions
             Expression::Bang(_) => todo!(),
         };
@@ -61,7 +107,5 @@ pub fn evaluate(ast: Vec<Expression>) {
 
     // At the top level, create the stack and evaluate each expression
     let mut stack = Stack::new();
-    for node in ast {
-        eval(node, &mut stack);
-    }
+    eval(ast, &mut stack);
 }

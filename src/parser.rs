@@ -1,7 +1,7 @@
 use crate::types::{Expression, Token, Value};
 
 /// Parses a vector of tokens into a vector of expressions.
-pub fn parse(tokens: Vec<Token>) -> Vec<Expression> {
+pub fn parse(tokens: Vec<Token>) -> Expression {
     // A helper to parse a single expression from the current position in the token stream
     fn parse_one(tokens: &[Token]) -> (Expression, &[Token]) {
         if tokens[0].token == "@" {
@@ -70,5 +70,5 @@ pub fn parse(tokens: Vec<Token>) -> Vec<Expression> {
 
     // Parse the entire stream
     // TODO: This should be an exception if the stream is not empty after this
-    parse_until(tokens.as_slice(), None).0
+    Expression::Group(parse_until(tokens.as_slice(), None).0)
 }

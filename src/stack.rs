@@ -1,13 +1,13 @@
 #![allow(dead_code)]
 
 use crate::types::Value;
-use std::{collections::HashMap, rc::Rc};
+use std::{collections::HashMap, rc::Rc, fmt::Display};
 
 /// A stack in the context of the VM
 ///
 /// This will actually have a stack of data, and a map of names to stack indices
 /// These are also nested by block; when a new block is entered, a new stack is created
-#[derive(Debug, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct Stack {
     // The values on the stack
     data: Vec<Value>,
@@ -24,11 +24,19 @@ impl Stack {
     }
 
     /// Creates a new stack with the current stack as its parent
-    pub fn extend(self) -> Self {
+    /// 
+    /// n is the number of values to pop from the parent stack and push onto this one
+    pub fn extend(&mut self, n: usize) -> Self {
+        let mut values = vec![];
+        for _ in 0..n {
+            values.push(self.pop().unwrap());
+        }
+        values.reverse();
+
         Stack {
-            data: vec![],
+            data: values,
             names: HashMap::new(),
-            parent: Some(Rc::new(self)),
+            parent: Some(Rc::new(self.clone())),
         }
     }
 
@@ -38,6 +46,8 @@ impl Stack {
     }
 
     /// Pops a value off the stack
+    /// 
+    /// TODO: Handle popping a named value
     pub fn pop(&mut self) -> Option<Value> {
         self.data.pop()
     }
@@ -63,6 +73,8 @@ impl Stack {
     ///
     /// If this stack doesn't have it, check the parent
     pub fn get_named(&self, name: String) -> Option<Value> {
+        log::debug!("get_named({}) from {}", name, self);
+
         if self.names.contains_key(&name) {
             Some(self.data[self.names[&name]].clone())
         } else if self.parent.is_some() {
@@ -71,4 +83,33 @@ impl Stack {
             None
         }
     }
+}
+
+
+impl Display for Stack {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut s = String::new();
+
+        if self.parent.is_some() {
+            s.push_str(self.parent.as_ref().unwrap().to_string().as_str());
+            s.push_str(" : ");
+        }
+
+        s.push('[');
+        for (i, v) in self.data.iter().enumerate() {
+            s.push_str(format!("{}", v).as_str());
+
+            for (k, v) in self.names.iter() {
+                if *v == i {
+                    s.push_str(&format!("@{}", k));
+                }
+            }
+
+            if i != self.data.len() - 1 {
+                s.push(' ');
+            }
+        }
+        s.push(']');
+        write!(f, "{}", s)
+    }    
 }

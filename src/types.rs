@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+use std::fmt::Display;
+
 /// A token is a single unit of a program.
 #[derive(Clone, Debug)]
 pub struct Token {
@@ -35,6 +37,19 @@ pub enum Value {
     },
 }
 
+impl Display for Value {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", match self {
+            Value::Null => "null".to_string(),
+            Value::Integer(v) => v.to_string(),
+            Value::Float(v) => v.to_string(),
+            Value::String(v) => v.to_string(),
+            Value::Boolean(v) => v.to_string(),
+            Value::Block { arity_in, arity_out, .. } => format!("<block {} {}>", arity_in, arity_out),
+        })
+    }
+}
+
 /// An expression is a single unit of a program, part of the AST
 #[derive(Clone, Debug)]
 pub enum Expression {
@@ -54,4 +69,35 @@ pub enum Expression {
     /// If followed by [], an @list is
     At(Box<Expression>),
     Bang(Box<Expression>),
+}
+
+macro_rules! write_children {
+    ($f:ident $prefix:literal $children:ident $suffix:literal) => {
+        {
+            let mut s = String::new();
+            s.push($prefix);
+            for (i, child) in $children.iter().enumerate() {
+                s.push_str(&format!("{}", child));
+                if i != $children.len() - 1 {
+                    s.push(' ');
+                }
+            }
+            s.push($suffix);
+            write!($f, "{}", s)
+        }
+    }
+}
+
+impl Display for Expression {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Expression::Identifier(id) => write!(f, "{}", id),
+            Expression::Literal(value) => write!(f, "{}", value),
+            Expression::Block(children) => write_children!{f '{' children '}'},
+            Expression::List(children) => write_children!{f '[' children ']'},
+            Expression::Group(children) => write_children!{f '(' children ')'},
+            Expression::At(expr) => write!(f, "@{}", expr),
+            Expression::Bang(expr) => write!(f, "!{}", expr),
+        }
+    }
 }
