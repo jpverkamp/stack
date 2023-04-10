@@ -1,0 +1,13 @@
+{
+    @[n]
+    $block @fib
+
+    { 1 }
+    { 
+        n 1 - fib
+        n 2 - fib
+    }
+    n 2 <= if
+} @fib
+
+30 fib writeln

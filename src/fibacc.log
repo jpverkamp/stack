@@ -1,0 +1,129 @@
+
+# Evaluating { ... } @fib
+[ <block 1 1>@fib ]
+
+# Evaluating 5 
+[ <block 1 1>@fib 5 ]
+
+# Evaluating fib, because arity is 1 in, 1 out; signify the 5 moving to the local stack
+[ <block 1 1>@fib [ 5 ] ]
+
+# Evaluating @n
+[ <block 1 1>@fib [ 5@n ] ]
+
+# Evaluating { ... } @fibacc, this has an arity of 4 in, 1 out
+[ <block 1 1>@fib [ 5@n <block 4 1>@fibacc ] ]
+
+# Push the local variables to the stack, n 1 1
+# Here, the value that is named n is pushed, so 5 1 1
+[ <block 1 1>@fib [ 5@n <block 4 1>@fibacc 5 1 1 ] ]
+
+# Call fibacc, creating another local stack, because it's called with recur, include the function itself
+[ <block 1 1@fib
+    [ 5@n <block 4 1>@fibacc 
+        [ 5 1 1 <block 4 1> ]
+    ]
+]
+
+# Name these variables
+[ <block 1 1@fib
+    [ 5@n <block 4 1>@fibacc 
+        [ 5@n 1@a 1@b <block 4 1>@fibacc ]
+    ]
+]
+
+# Create the first if arm, it's another block with 0 in, 1 out
+[ <block 1 1@fib
+    [ 5@n <block 4 1>@fibacc 
+        [ 5@n 1@a 1@b <block 4 1>@fibacc <block 0 1> ]
+    ]
+]
+
+# Create the second arm
+[ <block 1 1@fib
+    [ 5@n <block 4 1>@fibacc 
+        [ 5@n 1@a 1@b <block 4 1>@fibacc <block 0 1> <block 0 1> ]
+    ]
+]
+
+# A few steps to calculate the if
+# First, the current value of n
+[ <block 1 1@fib
+    [ 5@n <block 4 1>@fibacc 
+        [ 5@n 1@a 1@b <block 4 1>@fibacc <block 0 1> <block 0 1> 5 ]
+    ]
+]
+
+# Then the 1 and the inequality
+[ <block 1 1@fib
+    [ 5@n <block 4 1>@fibacc 
+        [ 5@n 1@a 1@b <block 4 1>@fibacc <block 0 1> <block 0 1> 5 1 ]
+    ]
+]
+
+[ <block 1 1@fib
+    [ 5@n <block 4 1>@fibacc 
+        [ 5@n 1@a 1@b <block 4 1>@fibacc <block 0 1> <block 0 1> false ]
+    ]
+]
+
+# The apply the if, this will end up creating a new scope for the second arm
+[ <block 1 1@fib
+    [ 5@n <block 4 1>@fibacc 
+        [ 5@n 1@a 1@b <block 4 1>@fibacc <block 0 1> <block 0 1> 5 1 
+            []
+        ]
+    ]
+]
+
+# In this scope, push and modify n/a/b
+# They will be looked up in the closest inner scope, so the fibacc n, not the fib n
+[ <block 1 1@fib
+    [ 5@n <block 4 1>@fibacc 
+        [ 5@n 1@a 1@b <block 4 1>@fibacc 
+            [ 5 1 ] # Pushing n and then 1
+        ]
+    ]
+]
+
+[ <block 1 1@fib
+    [ 5@n <block 4 1>@fibacc 
+        [ 5@n 1@a 1@b <block 4 1>@fibacc 
+            [ 4 ] # Applying the minus
+        ]
+    ]
+]
+
+[ <block 1 1@fib
+    [ 5@n <block 4 1>@fibacc 
+        [ 5@n 1@a 1@b <block 4 1>@fibacc 
+            [ 4 1 1 ] # Pushing a and b
+        ]
+    ]
+]
+
+[ <block 1 1@fib
+    [ 5@n <block 4 1>@fibacc 
+        [ 5@n 1@a 1@b <block 4 1>@fibacc 
+            [ 4 2 ] # Applying the plus
+        ]
+    ]
+]
+
+[ <block 1 1@fib
+    [ 5@n <block 4 1>@fibacc 
+        [ 5@n 1@a 1@b <block 4 1>@fibacc 
+            [ 4 2 1 ] # Pushing the a
+        ]
+    ]
+]
+
+[ <block 1 1@fib
+    [ 5@n <block 4 1>@fibacc 
+        [ 5@n 1@a 1@b <block 4 1>@fibacc 
+            [ [ 4 2 1 <block 4 1> ] ] # Making the recursive call
+        ]
+    ]
+]
+
+# etc

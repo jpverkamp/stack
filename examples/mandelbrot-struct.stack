@@ -1,0 +1,67 @@
+@{ x y } @Point
+{ 0.0 0.0 Point } @Point.zero
+{ @[self other] self.x other.x + self.y other.y + Point } @Point.add
+{ @self self.x self.x * self.y self.y * + } @Point.mag2
+
+@{ real imag } @Complex
+{ 0.0 0.0 Complex } @Complex.zero
+{ @[self other] self.real other.real + self.imag other.imag + Complex } @Complex.add
+{ 
+    @[self other]
+    self.real other.real *
+    self.imag other.imag * - 
+    self.real other.imag * +
+    self.imag other.real * +
+    Complex 
+} @Complex.mul
+{ @self self.real self.real * self.imag self.imag * + } @Complex.mag2
+
+@{ r g b } @RGB
+
+{ 
+    @[p max_iter]
+    
+    Complex.zero max_iter
+    {
+        @[z i] 
+        2 !arity
+
+        {
+            @[z i iter]
+
+            { 0 } i max_iter == 
+            { i } z.mag2 4.0 > 
+            { 
+                z z.mul p.add
+                i 1 +
+                iter.recur
+            } 
+            cond
+
+        } @iter
+
+        z i iter.recur
+    } forever
+} @mandelbrot
+
+"P3\n" <stdout> write      # format
+"256 256\n" <stdout> write # width and height
+"256\n" <stdout> write     # max color value
+{ 
+    @y
+    { 
+        @x
+
+        # Calculate value at x,y
+        x y Point 256 mandelbrot @g
+
+        # Write to PPM
+        { 
+            g <stdout> write 
+            " " <stdout> write
+        } 3 loop
+        "\t" <stdout> write
+
+    } 256 loop
+    "\n" <stdout> write
+} 256 loop

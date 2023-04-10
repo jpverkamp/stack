@@ -1,0 +1,19 @@
+{
+    @n 
+
+    {
+        @[n a b fibacc]
+        { b }
+        {
+            n 1 - 
+            a b + 
+            a
+            fibacc.recur
+        } 
+        n 1 <= if
+    } @fibacc
+
+    n 1 1 fibacc.recur
+} @fib
+
+30 fib writeln
