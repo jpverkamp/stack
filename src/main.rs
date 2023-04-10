@@ -1,22 +1,28 @@
+use log;
 use std::io;
 
-mod types;
 mod stack;
+mod types;
 
 mod lexer;
 mod parser;
 mod vm;
 
-
 fn main() {
+    pretty_env_logger::init();
+
     let tokens = lexer::tokenize(io::stdin().lock());
-    for token in tokens.iter() {
-        print!("{} ", token.token);
-    }
-    println!();
+    log::info!(
+        "Tokens: {}",
+        tokens
+            .iter()
+            .map(|token| token.token.clone())
+            .collect::<Vec<String>>()
+            .join(" ")
+    );
 
     let ast = parser::parse(tokens);
-    println!("{:#?}", ast);
+    log::info!("AST:\n{:#?}", ast);
 
     vm::evaluate(ast);
 }
