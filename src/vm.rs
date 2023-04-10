@@ -96,7 +96,16 @@ pub fn evaluate(ast: Expression) {
                     Expression::Identifier(name) => {
                         stack.name(name.clone());
                     },
-                    Expression::List(_) => todo!(),
+                    Expression::List(exprs) => {
+                        let mut names = vec![];
+                        for expr in exprs {
+                            match expr {
+                                Expression::Identifier(name) => names.push(name.clone()),
+                                _ => panic!("Invalid @ expression, @[list] must contain only names, got {:?}", node)
+                            }
+                        }
+                        stack.name_many(names.clone())
+                    },
                     _ => panic!("Invalid @ expression, must be @name or @[list], got {:?}", node)
                 }
             },

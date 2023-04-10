@@ -65,7 +65,7 @@ impl Stack {
     pub fn name_many(&mut self, names: Vec<String>) {
         for (i, name) in names.iter().enumerate() {
             self.names
-                .insert(name.clone(), self.data.len() - 1 - names.len() + i);
+                .insert(name.clone(), self.data.len() - names.len() + i);
         }
     }
 
