@@ -32,12 +32,19 @@ pub fn tokenize(reader: impl BufRead) -> Vec<Token> {
 
         // Within a row, scan for tokens character by character
         loop {
+            // Skip whitespace
             if let Some(c) = whitespace_regex.captures(line) {
                 line = line.substring(c[0].len(), line.len());
                 column += c[0].len();
             }
 
+            // Read the next token (patterns above)
             if let Some(c) = token_regex.captures(line) {
+                // Ignore comments
+                if c[0].starts_with('#') { 
+                    continue;
+                }
+
                 tokens.push(Token {
                     row,
                     column,

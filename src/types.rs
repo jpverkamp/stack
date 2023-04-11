@@ -68,10 +68,8 @@ pub enum Expression {
     /// An @ prefixed expression, used to name values on the stack
     /// If followed by [], an @list is multiple names
     At(Box<Expression>),
-
     /// A ! prefixed expression, used to set values by name
     Bang(Box<Expression>),
-
     /// A $ prefixed expression, used to pass to the stack (only really needed for blocks)
     Dollar(Box<Expression>),
 }
