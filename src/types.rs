@@ -43,7 +43,7 @@ impl Display for Value {
             Value::Null => "null".to_string(),
             Value::Integer(v) => v.to_string(),
             Value::Float(v) => v.to_string(),
-            Value::String(v) => v.to_string(),
+            Value::String(v) => v.to_string().trim_matches('"').to_string(),
             Value::Boolean(v) => v.to_string(),
             Value::Block { arity_in, arity_out, .. } => format!("{{{}->{}}}", arity_in, arity_out),
         })

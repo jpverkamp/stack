@@ -61,11 +61,12 @@ pub fn evaluate(ast: Expression) {
             // TODO: should this be a stack method?
             let mut results = vec![];
             for _ in 0..arity_out {
-                results.push(substack.pop())
+                results.push(substack.pop().unwrap())
             }
+            results.reverse();
 
             for result in results {
-                stack.push(result.unwrap());
+                stack.push(result);
             }
         }
 
@@ -103,6 +104,10 @@ pub fn evaluate(ast: Expression) {
                 // Pop and write a value to stdout with a newline
                 "writeln" => {
                     println!("{}", stack.pop().unwrap());
+                },
+                // Write a newline 
+                "newline" => {
+                    println!();
                 },
                 // Loop over an iterable, expects a block and an iterable
                 "loop" => {

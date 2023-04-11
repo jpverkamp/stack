@@ -1,0 +1,28 @@
+{
+  @[ar ai br bi] !2
+  ar br * ai bi * - 
+  ar bi * ai br * +
+} @cmul
+
+{
+  @[ar ai br bi] !2
+  ar br +
+  ai bi +
+} @cadd
+
+{
+  @[r i] !0
+  r write 
+  "+" write
+  i write
+  "i" write
+} @cwrite
+
+"multiply:" writeln
+3 -2 4 5 cmul cwrite newline
+22 7 cwrite newline
+newline
+
+"add:" writeln
+3 -2 4 5 cadd cwrite newline
+7 3 cwrite newline
