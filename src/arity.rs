@@ -101,6 +101,12 @@ pub fn calculate_arity(expression: &Expression) -> Result<(usize, usize), String
                 Expression::Identifier(_) => Ok((1, 0)),
                 _ => Err(format!("Cannot calculate the arity of a non-named ! expression: {}", expression.clone()))
             }
-        }
+        },
+        Expression::Dollar(body) => {
+            match body.as_ref() {
+                Expression::Identifier(_) => Ok((0, 1)),
+                _ => Err(format!("Cannot calculate the arity of a non-named $ expression: {}", expression.clone()))
+            }
+        },
     }
 }

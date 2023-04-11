@@ -197,6 +197,22 @@ pub fn evaluate(ast: Expression) {
                     _ => panic!("Invalid ! expression, must be !# or !name, got {:?}", node)
                 }
             },
+            // $ expressions are used to access named expressions without evaluating
+            Expression::Dollar(subnode) => {
+                match subnode.as_ref() {
+                    // Push to stack (don't evaluate)
+                    Expression::Identifier(name) => {
+                        if let Some(value) = stack.get_named(name.clone()) {
+                            stack.push(value.clone());
+                        } else {
+                            panic!("Unknown identifier {:?}", name);
+                        }
+                    },
+                    
+                    // Anything else doesn't currently make sense
+                    _ => panic!("Invalid $ expression, must be $name, got {:?}", node)
+                }
+            },
         };
     }
 

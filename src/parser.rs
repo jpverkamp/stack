@@ -12,6 +12,10 @@ pub fn parse(tokens: Vec<Token>) -> Expression {
             // ! expressions prefix the next value (assignment)
             let (next, tokens) = parse_one(&tokens[1..]);
             (Expression::Bang(Box::new(next)), tokens)
+        } else if tokens[0].token == "$" {
+            // $ expressions allow pushing a block to the stack
+            let (next, tokens) = parse_one(&tokens[1..]);
+            (Expression::Dollar(Box::new(next)), tokens)
         } else if tokens[0].token == "{" {
             // { expressions are blocks
             let (children, tokens) = parse_until(&tokens[1..], Some(String::from("}")));

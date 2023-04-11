@@ -66,9 +66,14 @@ pub enum Expression {
     Group(Vec<Expression>),
 
     /// An @ prefixed expression, used to name values on the stack
-    /// If followed by [], an @list is
+    /// If followed by [], an @list is multiple names
     At(Box<Expression>),
+
+    /// A ! prefixed expression, used to set values by name
     Bang(Box<Expression>),
+
+    /// A $ prefixed expression, used to pass to the stack (only really needed for blocks)
+    Dollar(Box<Expression>),
 }
 
 macro_rules! write_children {
@@ -98,6 +103,7 @@ impl Display for Expression {
             Expression::Group(children) => write_children!{f '(' children ')'},
             Expression::At(expr) => write!(f, "@{}", expr),
             Expression::Bang(expr) => write!(f, "!{}", expr),
+            Expression::Dollar(expr) => write!(f, "${}", expr),
         }
     }
 }
