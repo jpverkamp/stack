@@ -5,4 +5,4 @@
   n 1 < if
 } @fact
 
-100 $fact fact writeln
+5 $fact fact writeln
