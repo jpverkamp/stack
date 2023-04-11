@@ -1,7 +1,7 @@
 # Set image dimensions and maximum number of iterations
-256 @width
-256 @height
-1000 @max_iterations
+128 @width
+128 @height
+1024 @max_iterations
 
 # Set the range of complex numbers to visualize
 -2.0 @min_real
@@ -25,42 +25,41 @@ max_imag min_imag - height / @imag_step
   ai bi +
 } @cadd
 
+{
+  @[r i]
+  r i * r i * +
+} @cmag2
+
 { 
   @[px py max_iter]
   
   {
-    @[zx zy i] 
-
+    @[zx zy i iter] 
+    
+    0
     {
-      @[iter zx zy i]
-      
-      { 0 } 
-      {
-        { i }
-        { 
-          zx zy zx zy cmul px py cadd
-          i 1 +
-          iter.recur
-        }
-        z.mag2 4.0 > if
-      } 
-      i max_iter == if
+      @0 !1
+      i
+      { 
+        @0 !1
+        zx zy zx zy cmul px py cadd
+        i 1 +
+        $iter iter
+      }
+      zx zy cmag2 4.0 > if
+    } 
+    i max_iter == if
 
-    } @iter
-
-    z i iter.recur
   } @iter
 
-  0.0 0.0 1 iter
-
+  px py 1 $iter iter
 } @mandelbrot
 
-
 # Write the PPM header
-"P3\n" write
+"P3" writeln
 width writeln
 height writeln
-"255\n" write
+"255" writeln
 
 # Loop through image rows (y) and columns (x)
 {
@@ -73,10 +72,10 @@ height writeln
         y imag_step * min_imag + @imag
 
         # Calculate the number of iterations for the current complex number
-        real imag max_iterations mandelbrot_at_point @iterations
+        real imag max_iterations mandelbrot @iterations
 
         # Scale the number of iterations to a color value (assuming grayscale)
-        255 iterations max_iterations * @color
+        1.0 iterations * max_iterations / 255 * int @color
 
         # Write the color value to the PPM file (red, green, blue)
         color write " " write
