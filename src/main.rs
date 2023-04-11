@@ -7,6 +7,7 @@ mod types;
 mod lexer;
 mod parser;
 mod vm;
+mod arity;
 
 fn main() {
     pretty_env_logger::init();

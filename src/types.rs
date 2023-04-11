@@ -45,7 +45,7 @@ impl Display for Value {
             Value::Float(v) => v.to_string(),
             Value::String(v) => v.to_string(),
             Value::Boolean(v) => v.to_string(),
-            Value::Block { arity_in, arity_out, .. } => format!("<block {} {}>", arity_in, arity_out),
+            Value::Block { arity_in, arity_out, .. } => format!("<block in={} out={}>", arity_in, arity_out),
         })
     }
 }

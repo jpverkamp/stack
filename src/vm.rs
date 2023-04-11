@@ -1,3 +1,4 @@
+use crate::arity::calculate_arity;
 use crate::stack::Stack;
 use crate::types::{Expression, Value};
 
@@ -44,7 +45,7 @@ macro_rules! comparison_binop {
 pub fn evaluate(ast: Expression) {
     // Internal eval function, carries the stack with it and mutates it
     fn eval(node: Expression, stack: &mut Stack) {
-        log::debug!("eval({node}, {stack})");
+        log::info!("eval({node}, {stack})");
 
         // Cloned for debug printing
         match node.clone() {
@@ -141,10 +142,12 @@ pub fn evaluate(ast: Expression) {
             Expression::Literal(value) => stack.push(value.clone()),
             // Blocks are parsed into block values, arity is calculated here
             Expression::Block(children) => {
+                let (arity_in, arity_out) = calculate_arity(&node.clone()).unwrap();
+
                 // TODO: Actually calculate arity
                 stack.push(Value::Block {
-                    arity_in: 1,
-                    arity_out: 1,
+                    arity_in,
+                    arity_out,
                     expression: Box::new(Expression::Group(children)),
                 });
             }
@@ -161,9 +164,13 @@ pub fn evaluate(ast: Expression) {
             // @[] expressions name multiple values
             Expression::At(subnode) => {
                 match subnode.as_ref() {
+                    // Specifying input arity, ignore
+                    Expression::Literal(Value::Integer(_)) => {},
+                    // Naming the top of the stack
                     Expression::Identifier(name) => {
                         stack.name(name.clone());
                     },
+                    // Naming several values at once on top of the stack
                     Expression::List(exprs) => {
                         let mut names = vec![];
                         for expr in exprs {
@@ -178,7 +185,18 @@ pub fn evaluate(ast: Expression) {
                 }
             },
             // ! expressions set (or update) the value of named expressions
-            Expression::Bang(_) => todo!(),
+            Expression::Bang(subnode) => {
+                match subnode.as_ref() {
+                    // Output expression, ignore
+                    Expression::Literal(Value::Integer(_)) => {},
+
+                    // Write to a named variable
+                    Expression::Identifier(_name) => todo!(),
+                    
+                    // Anything else doesn't currently make sense
+                    _ => panic!("Invalid ! expression, must be !# or !name, got {:?}", node)
+                }
+            },
         };
     }
 

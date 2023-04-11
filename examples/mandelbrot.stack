@@ -14,15 +14,13 @@ max_real min_real - width / @real_step
 max_imag min_imag - height / @imag_step
 
 {
-  @[ar ai br bi]
-  2 !arity
+  @[ar ai br bi] !2
   ar br * ai bi * - 
   ar bi * ai br * +
 } @cmul
 
 {
-  @[ar ai br bi]
-  2 !arity
+  @[ar ai br bi] !2
   ar br +
   ai bi +
 } @cadd

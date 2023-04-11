@@ -1,0 +1,6 @@
+{
+    @a !2
+    a a
+} @dup
+
+5 dup writeln writeln

@@ -23,8 +23,7 @@
     
     Complex.zero max_iter
     {
-        @[z i] 
-        2 !arity
+        @[z i] !2
 
         {
             @[z i iter]

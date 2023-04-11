@@ -1,0 +1,6 @@
+{
+    @[a b]
+    a b *
+} @times
+
+3 5 times writeln
