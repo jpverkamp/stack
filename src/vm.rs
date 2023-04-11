@@ -84,8 +84,50 @@ pub fn evaluate(ast: Expression) {
                 "==" => comparison_binop!(stack, |a, b| { a == b }),
                 ">=" => comparison_binop!(stack, |a, b| { a >= b }),
                 ">" => comparison_binop!(stack, |a, b| { a > b }),
+                "write" => {
+                    print!("{}", stack.pop().unwrap());
+                },
                 "writeln" => {
                     println!("{}", stack.pop().unwrap());
+                },
+                "loop" => {
+                    let iterable = stack.pop().unwrap();
+                    let block = stack.pop().unwrap();
+
+                    match iterable {
+                        Value::Integer(n) => {
+                            if n < 0 {
+                                panic!("numeric loops must have a positive integer, got {}", n);
+                            }
+
+                            for i in 0..n {
+                                stack.push(Value::Integer(i));
+                                match block.clone() {
+                                    // Blocks get evaluated lazily (now)
+                                    Value::Block { arity_in, arity_out, expression } => {
+                                        eval_block(stack, arity_in, expression, arity_out);
+                                    },
+                                    // Loops must have a block
+                                    _ => panic!("loop must have a block, got {}", block),
+                                }
+                            }
+                        },
+                        Value::String(s) => {
+                            for c in s.chars() {
+                                stack.push(Value::String(c.to_string()));
+                                match block.clone() {
+                                    Value::Block { arity_in, arity_out, expression } => {
+                                        eval_block(stack, arity_in, expression, arity_out);
+                                    },
+                                    _ => panic!("loop must have a block, got {}", block),
+                                }
+                            }
+                        },
+                        _ => panic!("loop must have an iterable (currently an integer or string), got {}", iterable),
+                    };
+                    
+
+
                 },
                 "if" => {
                     let condition = stack.pop().unwrap();
