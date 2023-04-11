@@ -1,0 +1,6 @@
+{
+    @n
+    1 { @2 1 + * } n loop
+} @fact
+
+10 fact writeln

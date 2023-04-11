@@ -1,0 +1,4 @@
+10 {
+    @n
+    1 { @2 1 + * } n loop
+} apply writeln

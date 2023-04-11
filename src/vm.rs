@@ -74,22 +74,37 @@ pub fn evaluate(ast: Expression) {
             // Identifiers are globals are named expressions
             // TODO: Extract globals into their own module
             Expression::Identifier(id) => match id.as_str() {
+                // Built in numeric functions
                 "+" => numeric_binop!(stack, |a, b| { a + b }),
                 "-" => numeric_binop!(stack, |a, b| { a - b }),
                 "*" => numeric_binop!(stack, |a, b| { a * b }),
                 "/" => numeric_binop!(stack, |a, b| { a / b }),
                 "%" => numeric_binop!(stack, |a, b| { a % b }),
+                // Built in comparisons
                 "<" => comparison_binop!(stack, |a, b| { a < b }),
                 "<=" => comparison_binop!(stack, |a, b| { a <= b }),
                 "==" => comparison_binop!(stack, |a, b| { a == b }),
                 ">=" => comparison_binop!(stack, |a, b| { a >= b }),
                 ">" => comparison_binop!(stack, |a, b| { a > b }),
+                // Apply a block to the stack
+                "apply" => {
+                    let block = stack.pop().unwrap();
+                    match block {
+                        Value::Block { arity_in, arity_out, expression } => {
+                            eval_block(stack, arity_in, expression, arity_out);
+                        },
+                        _ => panic!("apply expects a block, got {}", block),
+                    }
+                },
+                // Pop and write a value to stdout
                 "write" => {
                     print!("{}", stack.pop().unwrap());
                 },
+                // Pop and write a value to stdout with a newline
                 "writeln" => {
                     println!("{}", stack.pop().unwrap());
                 },
+                // Loop over an iterable, expects a block and an iterable
                 "loop" => {
                     let iterable = stack.pop().unwrap();
                     let block = stack.pop().unwrap();
@@ -125,10 +140,8 @@ pub fn evaluate(ast: Expression) {
                         },
                         _ => panic!("loop must have an iterable (currently an integer or string), got {}", iterable),
                     };
-                    
-
-
                 },
+                // If statement, expects two blocks or literals and a conditional (must be boolean)
                 "if" => {
                     let condition = stack.pop().unwrap();
                     let false_branch = stack.pop().unwrap();
