@@ -47,6 +47,28 @@ pub fn evaluate(ast: Expression) {
     fn eval(node: Expression, stack: &mut Stack) {
         log::info!("eval({node}, {stack})");
 
+        // Handle running a block
+        fn eval_block(stack: &mut Stack, arity_in: usize, expression: Box<Expression>, arity_out: usize) {
+            // Extend the stack with arity_in values
+            let mut substack = stack.extend(arity_in);
+            log::debug!("substack: {}", substack);
+
+            // Evaluate the block with that new stack context
+            eval(expression.as_ref().clone(), &mut substack);
+            log::debug!("substack after eval: {}", substack);
+                                    
+            // Copy arity_out values to return, drop the rest of the substack
+            // TODO: should this be a stack method?
+            let mut results = vec![];
+            for _ in 0..arity_out {
+                results.push(substack.pop())
+            }
+
+            for result in results {
+                stack.push(result.unwrap());
+            }
+        }
+
         // Cloned for debug printing
         match node.clone() {
             // Identifiers are globals are named expressions
@@ -82,26 +104,7 @@ pub fn evaluate(ast: Expression) {
                     match branch {
                         // Blocks get evaluated lazily (now)
                         Value::Block { arity_in, arity_out, expression } => {
-                            // TODO: Refactor this
-
-                            // Extend the stack with arity_in values
-                            let mut substack = stack.extend(arity_in);                           
-                            log::debug!("substack: {}", substack);
-
-                            // Evaluate the block with that new stack context
-                            eval(expression.as_ref().clone(), &mut substack);
-                            log::debug!("substack after eval: {}", substack);
-                            
-                            // Copy arity_out values to return, drop the rest of the substack
-                            // TODO: should this be a stack method?
-                            let mut results = vec![];
-                            for _ in 0..arity_out {
-                                results.push(substack.pop())
-                            }
-
-                            for result in results {
-                                stack.push(result.unwrap());
-                            }
+                            eval_block(stack, arity_in, expression, arity_out);
                         },
                         // All literal values just get directly pushed
                         _ => {
@@ -112,24 +115,7 @@ pub fn evaluate(ast: Expression) {
                 name => {
                     if let Some(value) = stack.get_named(String::from(name)) {
                         if let Value::Block { arity_in, arity_out, expression } = value {
-                            // Extend the stack with arity_in values
-                            let mut substack = stack.extend(arity_in);                           
-                            log::debug!("substack: {}", substack);
-
-                            // Evaluate the block with that new stack context
-                            eval(expression.as_ref().clone(), &mut substack);
-                            log::debug!("substack after eval: {}", substack);
-                            
-                            // Copy arity_out values to return, drop the rest of the substack
-                            // TODO: should this be a stack method?
-                            let mut results = vec![];
-                            for _ in 0..arity_out {
-                                results.push(substack.pop())
-                            }
-
-                            for result in results {
-                                stack.push(result.unwrap());
-                            }
+                            eval_block(stack, arity_in, expression, arity_out);
                         } else {
                             stack.push(value);
                         }
@@ -220,3 +206,4 @@ pub fn evaluate(ast: Expression) {
     let mut stack = Stack::new();
     eval(ast, &mut stack);
 }
+
