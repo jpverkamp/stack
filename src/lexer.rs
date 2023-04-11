@@ -7,6 +7,8 @@ use crate::types::Token;
 
 /// Tokenizes a stream of characters into a vector of tokens.
 pub fn tokenize(reader: impl BufRead) -> Vec<Token> {
+    log::debug!("tokenize()");
+
     let mut tokens = vec![];
     let token_patterns = vec![
         // single characters
@@ -30,6 +32,8 @@ pub fn tokenize(reader: impl BufRead) -> Vec<Token> {
         let mut line = line.as_str();
         let mut column = 0;
 
+        log::debug!("tokenize: line {}: {:?}", row, line);
+
         // Within a row, scan for tokens character by character
         loop {
             // Skip whitespace
@@ -42,7 +46,7 @@ pub fn tokenize(reader: impl BufRead) -> Vec<Token> {
             if let Some(c) = token_regex.captures(line) {
                 // Ignore comments
                 if c[0].starts_with('#') { 
-                    continue;
+                    break;
                 }
 
                 tokens.push(Token {

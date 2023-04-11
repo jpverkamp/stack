@@ -8,7 +8,7 @@ pub fn calculate_arity(expression: &Expression) -> Result<(usize, usize), String
             match id.as_str() {
                 "+" | "-" | "*" | "/" | "%" => Ok((2, 1)),
                 "<" | "<=" | ">" | ">=" | "==" | "!=" => Ok((2, 1)),
-                _ => todo!(),
+                _ => panic!("unknown id to calculate arity of: {} (may need to explicitly specify it)", id)
             }
         },
         Expression::Literal(_) => Ok((0, 1)),

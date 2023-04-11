@@ -43,6 +43,8 @@ macro_rules! comparison_binop {
 /// Evaluates a vector of expressions
 /// This does not actually return anything, but instead mutates the stack
 pub fn evaluate(ast: Expression) {
+    log::debug!("evaluate({})", ast);
+
     // Internal eval function, carries the stack with it and mutates it
     fn eval(node: Expression, stack: &mut Stack) {
         log::info!("eval({node}, {stack})");
@@ -87,6 +89,16 @@ pub fn evaluate(ast: Expression) {
                 "==" => comparison_binop!(stack, |a, b| { a == b }),
                 ">=" => comparison_binop!(stack, |a, b| { a >= b }),
                 ">" => comparison_binop!(stack, |a, b| { a > b }),
+                // Convert a value to an int if possible
+                "int" => {
+                    let value = stack.pop().unwrap();
+                    match value {
+                        Value::String(s) => stack.push(Value::Integer(s.parse().unwrap())),
+                        Value::Integer(i) => stack.push(Value::Integer(i)),
+                        Value::Float(f) => stack.push(Value::Integer(f as i64)),
+                        _ => panic!("int cannot, got {}", value),
+                    }
+                },
                 // Apply a block to the stack
                 "apply" => {
                     let block = stack.pop().unwrap();
