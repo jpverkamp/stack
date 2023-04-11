@@ -3,17 +3,19 @@
 
     {
         @[n a b fibacc]
-        { b }
+        b
         {
+            @0 !1
             n 1 - 
             a b + 
             a
-            fibacc.recur
+            $fibacc
+            fibacc
         } 
         n 1 <= if
     } @fibacc
 
-    n 1 1 fibacc.recur
+    n 1 1 $fibacc fibacc
 } @fib
 
-30 fib writeln
+50 fib writeln

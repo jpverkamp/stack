@@ -1,13 +1,14 @@
 {
-    @[n]
-    $block @fib
+    @[n fib]
 
-    { 1 }
+    1
     { 
-        n 1 - fib
-        n 2 - fib
+        @0 !1
+        n 1 - $fib fib
+        n 2 - $fib fib
+        +
     }
     n 2 <= if
 } @fib
 
-30 fib writeln
+30 $fib fib writeln
