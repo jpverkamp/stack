@@ -1,5 +1,6 @@
 use crate::types::{Value, Expression};
 
+#[allow(dead_code)]
 pub fn calculate_arity(expression: &Expression) -> Result<(usize, usize), String> {
     log::debug!("calculate_arity({expression})");
 

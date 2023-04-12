@@ -8,6 +8,7 @@ mod lexer;
 mod parser;
 mod vm;
 mod arity;
+mod compile_c;
 
 fn main() {
     pretty_env_logger::init();
@@ -25,5 +26,8 @@ fn main() {
     let ast = parser::parse(tokens);
     log::info!("AST:\n{:#?}", ast);
 
-    vm::evaluate(ast);
+    // vm::evaluate(ast);
+
+    let c = compile_c::compile(ast);
+    println!("{}", c);
 }

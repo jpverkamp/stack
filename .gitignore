@@ -1,3 +1,4 @@
 /target
+/output
 *.ppm
 .DS_Store

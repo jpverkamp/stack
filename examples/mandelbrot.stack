@@ -1,7 +1,7 @@
 # Set image dimensions and maximum number of iterations
-128 @width
-128 @height
-1024 @max_iterations
+1024 @width
+1024 @height
+256 @max_iterations
 
 # Set the range of complex numbers to visualize
 -2.0 @min_real
@@ -80,7 +80,7 @@ height writeln
         # Write the color value to the PPM file (red, green, blue)
         color write " " write
         color write " " write
-        color writeln
-
+        color write " " write
     } width loop
+    newline
 } height loop

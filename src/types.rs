@@ -15,6 +15,7 @@ pub struct Token {
 
 /// A value is a literal value that has been evaluated.
 #[derive(Clone, Debug)]
+#[repr(u8)]
 pub enum Value {
     /// An empty value
     Null,
