@@ -2,48 +2,51 @@ use crate::arity::calculate_arity;
 use crate::stack::Stack;
 use crate::types::{Expression, Value};
 
-/// A helper macro to generate functions that operate on two integers and floats
-macro_rules! numeric_binop {
-    ($stack:expr, $f:expr) => {{
-        // TODO: Check we have enough values
-        let b = $stack.pop().unwrap();
-        let a = $stack.pop().unwrap();
 
-        let result = match (a, b) {
-            (Value::Integer(a), Value::Integer(b)) => Value::Integer($f(a, b)),
-            (Value::Float(a), Value::Float(b)) => Value::Float($f(a, b)),
-            (Value::Integer(a), Value::Float(b)) => Value::Float($f(a as f64, b)),
-            (Value::Float(a), Value::Integer(b)) => Value::Float($f(a, b as f64)),
-            _ => unimplemented!(),
-        };
-
-        $stack.push(result);
-    }};
-}
-
-/// A helper macro to generate functions that operate on two integers and floats
-macro_rules! comparison_binop {
-    ($stack:expr, $f:expr) => {{
-        // TODO: Check we have enough values
-        let b = $stack.pop().unwrap();
-        let a = $stack.pop().unwrap();
-
-        let result = match (a, b) {
-            (Value::Integer(a), Value::Integer(b)) => Value::Boolean($f(a, b)),
-            (Value::Float(a), Value::Float(b)) => Value::Boolean($f(a, b)),
-            (Value::Integer(a), Value::Float(b)) => Value::Boolean($f(a as f64, b)),
-            (Value::Float(a), Value::Integer(b)) => Value::Boolean($f(a, b as f64)),
-            _ => unimplemented!(),
-        };
-
-        $stack.push(result);
-    }};
-}
 
 /// Evaluates a vector of expressions
 /// This does not actually return anything, but instead mutates the stack
+#[allow(dead_code)]
 pub fn evaluate(ast: Expression) {
     log::debug!("evaluate({})", ast);
+
+    /// A helper macro to generate functions that operate on two integers and floats
+    macro_rules! numeric_binop {
+        ($stack:expr, $f:expr) => {{
+            // TODO: Check we have enough values
+            let b = $stack.pop().unwrap();
+            let a = $stack.pop().unwrap();
+
+            let result = match (a, b) {
+                (Value::Integer(a), Value::Integer(b)) => Value::Integer($f(a, b)),
+                (Value::Float(a), Value::Float(b)) => Value::Float($f(a, b)),
+                (Value::Integer(a), Value::Float(b)) => Value::Float($f(a as f64, b)),
+                (Value::Float(a), Value::Integer(b)) => Value::Float($f(a, b as f64)),
+                _ => unimplemented!(),
+            };
+
+            $stack.push(result);
+        }};
+    }
+
+    /// A helper macro to generate functions that operate on two integers and floats
+    macro_rules! comparison_binop {
+        ($stack:expr, $f:expr) => {{
+            // TODO: Check we have enough values
+            let b = $stack.pop().unwrap();
+            let a = $stack.pop().unwrap();
+
+            let result = match (a, b) {
+                (Value::Integer(a), Value::Integer(b)) => Value::Boolean($f(a, b)),
+                (Value::Float(a), Value::Float(b)) => Value::Boolean($f(a, b)),
+                (Value::Integer(a), Value::Float(b)) => Value::Boolean($f(a as f64, b)),
+                (Value::Float(a), Value::Integer(b)) => Value::Boolean($f(a, b as f64)),
+                _ => unimplemented!(),
+            };
+
+            $stack.push(result);
+        }};
+    }
 
     // Internal eval function, carries the stack with it and mutates it
     fn eval(node: Expression, stack: &mut Stack) {
