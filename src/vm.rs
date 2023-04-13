@@ -108,7 +108,7 @@ pub fn evaluate(ast: Expression) {
                             Value::Number(n) => stack.push(Value::Number(n.to_integer())),
                             _ => panic!("int cannot, got {}", value),
                         }
-                    }
+                    },
                     // Apply a block to the stack
                     "apply" => {
                         let block = stack.pop().unwrap();
@@ -122,7 +122,7 @@ pub fn evaluate(ast: Expression) {
                             }
                             _ => panic!("apply expects a block, got {}", block),
                         }
-                    }
+                    },
                     // Read a line from stdin as a string
                     "read" => {
                         let mut input = String::new();
@@ -134,56 +134,56 @@ pub fn evaluate(ast: Expression) {
                                 panic!("failed to read from stdin: {e}");
                             },
                         };
-                    }
+                    },
                     // Pop and write a value to stdout
                     "write" => {
                         print!("{}", stack.pop().unwrap());
-                    }
+                    },
                     // Pop and write a value to stdout with a newline
                     "writeln" => {
                         println!("{}", stack.pop().unwrap());
-                    }
+                    },
                     // Write a newline
                     "newline" => {
                         println!();
-                    }
+                    },
                     // Loop over an iterable, expects a block and an iterable
                     "loop" => {
                         let iterable = stack.pop().unwrap();
                         let block = stack.pop().unwrap();
 
                         match iterable {
-                        Value::Number(Number::Integer(n)) => {
-                            if n < 0 {
-                                panic!("numeric loops must have a positive integer, got {}", n);
-                            }
+                            Value::Number(Number::Integer(n)) => {
+                                if n < 0 {
+                                    panic!("numeric loops must have a positive integer, got {}", n);
+                                }
 
-                            for i in 0..n {
-                                stack.push(Value::Number(Number::Integer(i)));
-                                match block.clone() {
-                                    // Blocks get evaluated lazily (now)
-                                    Value::Block { arity_in, arity_out, expression } => {
-                                        eval_block(stack, arity_in, expression, arity_out);
-                                    },
-                                    // Loops must have a block
-                                    _ => panic!("loop must have a block, got {}", block),
+                                for i in 0..n {
+                                    stack.push(Value::Number(Number::Integer(i)));
+                                    match block.clone() {
+                                        // Blocks get evaluated lazily (now)
+                                        Value::Block { arity_in, arity_out, expression } => {
+                                            eval_block(stack, arity_in, expression, arity_out);
+                                        },
+                                        // Loops must have a block
+                                        _ => panic!("loop must have a block, got {}", block),
+                                    }
                                 }
-                            }
-                        },
-                        Value::String(s) => {
-                            for c in s.chars() {
-                                stack.push(Value::String(c.to_string()));
-                                match block.clone() {
-                                    Value::Block { arity_in, arity_out, expression } => {
-                                        eval_block(stack, arity_in, expression, arity_out);
-                                    },
-                                    _ => panic!("loop must have a block, got {}", block),
+                            },
+                            Value::String(s) => {
+                                for c in s.chars() {
+                                    stack.push(Value::String(c.to_string()));
+                                    match block.clone() {
+                                        Value::Block { arity_in, arity_out, expression } => {
+                                            eval_block(stack, arity_in, expression, arity_out);
+                                        },
+                                        _ => panic!("loop must have a block, got {}", block),
+                                    }
                                 }
-                            }
-                        },
-                        _ => panic!("loop must have an iterable (currently an integer or string), got {}", iterable),
-                    };
-                    }
+                            },
+                            _ => panic!("loop must have an iterable (currently an integer or string), got {}", iterable),
+                        };
+                    },
                     // If statement, expects two blocks or literals and a conditional (must be boolean)
                     "if" => {
                         let condition = stack.pop().unwrap();
@@ -224,7 +224,7 @@ pub fn evaluate(ast: Expression) {
                                 stack.push(branch);
                             }
                         }
-                    }
+                    },
                     name => {
                         if let Some(value) = stack.get_named(String::from(name)) {
                             if let Value::Block {
@@ -240,7 +240,7 @@ pub fn evaluate(ast: Expression) {
                         } else {
                             panic!("Unknown identifier {:?}", name);
                         }
-                    }
+                    },
                 }
             }
             // Literal values are just pushed onto the stack
