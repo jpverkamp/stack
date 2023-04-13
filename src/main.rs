@@ -10,6 +10,7 @@ mod arity;
 mod lexer;
 mod parser;
 mod vm;
+mod compile_c;
 
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
@@ -18,6 +19,10 @@ struct Args {
     /// Name of the person to greet
     #[arg(short, long)]
     file: String,
+
+    // If we should compile or interpret
+    #[arg(short, long)]
+    compile: bool,
 }
 
 fn main() {
@@ -39,5 +44,14 @@ fn main() {
     let ast = parser::parse(tokens);
     log::info!("AST:\n{:#?}", ast);
 
-    vm::evaluate(ast);
+
+    if args.compile {
+        let c_code = compile_c::compile(ast);
+        println!("{}", c_code);
+    } else {
+        vm::evaluate(ast);
+    }
+
+
+    
 }

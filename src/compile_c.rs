@@ -1,29 +1,23 @@
+use crate::numbers::Number;
 use crate::types::{Value, Expression};
 
 /// A helper macro to generate functions that operate on two integers and floats
 macro_rules! numeric_binop {
     ($lines:expr, $op:literal) => {{
-        let ty_integer = Value::Integer as u8;
-        let ty_float = Value::Float as u8;
         let op = stringify!($op).to_string().trim_matches('"').to_string();
 
         $lines.push(format!("
     {{
-        Value b = *stack_ptr--;
-        Value a = *stack_ptr--;
-
-        if (a.type == {ty_integer} && b.type == {ty_integer}) {{
-            Value v = {{.type={ty_integer}, .as_integer=a.as_integer {op} b.as_integer}};
-            *(++stack_ptr) = v;
-        }} else if (a.type == {ty_integer} && b.type == {ty_float}) {{
-            Value v = {{.type={ty_float}, .as_float=(double)a.as_integer {op} b.as_float}};
-            *(++stack_ptr) = v;
-        }} else if (a.type == {ty_float} && b.type == {ty_integer}) {{
-            Value v = {{.type={ty_float}, .as_float=a.as_float {op} (double)b.as_integer}};
-            *(++stack_ptr) = v;
-        }} else if (a.type == {ty_float} && b.type == {ty_float}) {{
-            Value v = {{.type={ty_float}, .as_float=a.as_float {op} b.as_float}};
-            *(++stack_ptr) = v;
+        Value *b = stack_ptr--;
+        Value *a = stack_ptr--;
+        coerce(a, b);
+        
+        if (a->type == TAG_NUMBER_INTEGER) {{
+            Value result = {{.type=TAG_NUMBER_INTEGER, .as_integer=a->as_integer {op} b->as_integer}};
+            *(++stack_ptr) = result;
+        }} else if (a->type == TAG_NUMBER_FLOAT) {{
+            Value result = {{.type=TAG_NUMBER_FLOAT, .as_integer=a->as_integer {op} b->as_integer}};
+            *(++stack_ptr) = result;
         }}
     }}
 "));
@@ -33,20 +27,48 @@ macro_rules! numeric_binop {
 pub fn compile(ast: Expression) -> String {
     let mut lines = vec![];
     lines.push("
-#include <stdio.h>
+#include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
+
+#define TAG_NUMBER          0
+#define TAG_NUMBER_INTEGER  1
+#define TAG_NUMBER_RATIONAL 2
+#define TAG_NUMBER_FLOAT    3
+#define TAG_NUMBER_COMPLEX  4
+
+#define TAG_STRING          16
+#define TAG_BOOLEAN         17
+#define TAG_BLOCK           18
 
 typedef struct {
     uint8_t type;
     union {
         int64_t as_integer;
         double as_float;
+
         char *as_string;
-        uint8_t as_boolean;
+        bool as_boolean;
         uint8_t as_block;
     };
 } Value;
+
+void coerce(Value *a, Value *b) {
+    if (a->type == b->type) {
+        return;
+    }
+
+    if (a->type == TAG_NUMBER_INTEGER && b->type == TAG_NUMBER_FLOAT) {
+        a->type = TAG_NUMBER_FLOAT;
+        a->as_float = (double)a->as_integer;
+    }
+
+    if (a->type == TAG_NUMBER_FLOAT && b->type == TAG_NUMBER_INTEGER) {
+        b->type = TAG_NUMBER_FLOAT;
+        b->as_float = (double)a->as_integer;
+    }
+}
 
 int main(int argc, char *argv[]) {
     // The stack holding all values
@@ -75,27 +97,22 @@ int main(int argc, char *argv[]) {
 
                     // Built ins 
                     "writeln" => {
-                        let ty_integer = Value::Integer as u8;
-                        let ty_float = Value::Integer as u8;
-                        let ty_string = Value::Integer as u8;
-                        let ty_boolean = Value::Integer as u8;
-
-                        lines.push(format!("
-    {{
+                        lines.push("
+    {
         Value v = *(stack_ptr--);
-        if (v.type == {ty_integer}) {{
-            printf(\"%lld\", v.as_integer);
-        }} else if (v.type == {ty_float}) {{
-            printf(\"%f\", v.as_float);
-        }} else if (v.type == {ty_string}) {{
-            printf(\"%s\", v.as_string);
-        }} else if (v.type == {ty_boolean}) {{
-            printf(\"%s\", v.as_boolean ? \"true\" : \"false\");
-        }} else {{
+        if (v.type == TAG_NUMBER_INTEGER) {
+            printf(\"%lld\\n\", v.as_integer);
+        } else if (v.type == TAG_NUMBER_FLOAT) {
+            printf(\"%f\\n\", v.as_float);
+        } else if (v.type == TAG_STRING) {
+            printf(\"%s\\n\", v.as_string);
+        } else if (v.type == TAG_BOOLEAN) {
+            printf(\"%s\\n\", v.as_boolean ? \"true\" : \"false\");
+        } else {
             // TODO: Error
-        }}
-    }}
-"));
+        }
+    }
+".to_string());
                     }
 
                     // Unknown identifier
@@ -105,15 +122,15 @@ int main(int argc, char *argv[]) {
                 
             },
             Expression::Literal(value) => {
-                let (tag, ty, value) = match value {
-                    Value::Null => todo!(),
-                    Value::Integer(v) => (
-                        Value::Integer as u8,
+                let (tag, field, value) = match value {
+                    // TODO: additional numeric tyhpes
+                    Value::Number(Number::Integer(v)) => (
+                        "TAG_NUMBER_INTEGER",
                         "integer",
                         v.to_string()
                     ),
-                    Value::Float(v) => (
-                        Value::Float as u8,
+                    Value::Number(Number::Float(v)) => (
+                        "TAG_NUMBER_FLOAT",
                         "float",
                         v.to_string()
                     ),
@@ -124,20 +141,13 @@ int main(int argc, char *argv[]) {
 
                 lines.push(format!("
     {{
-        Value v = {{.type={tag}, .as_{ty}={value}}};
+        Value v = {{.type={tag}, .as_{field}={value}}};
         *(++stack_ptr) = v;
     }}
 "));
             },
-            Expression::Block(id, children) => {
-                lines.push(format!("
-{id}:
-"));
-                for child in children {
-                    for line in compile_expr(child) {
-                        lines.push(line);
-                    }
-                }
+            Expression::Block(_) => {
+                todo!();
             },
             Expression::List(_) => todo!(),
             Expression::Group(exprs) => {
@@ -147,18 +157,8 @@ int main(int argc, char *argv[]) {
                     }
                 }
             },
-            Expression::At(value) => {
-                let ty_integer = Value::Integer as u8;
-                let ty_float = Value::Float as u8;
-                let ty_string = Value::String as u8;
-                let ty_boolean = Value::Boolean as u8;
-
-                lines.push(format!("
-    {{ 
-        Value v = {{.type={ty_integer}, .as_integer={value}}};
-        *(++stack_ptr) = v;
-    }}
-"));
+            Expression::At(_) => {
+                todo!();
             },
             Expression::Bang(_) => todo!(),
             Expression::Dollar(_) => todo!(),
