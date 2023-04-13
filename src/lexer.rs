@@ -13,8 +13,18 @@ pub fn tokenize(reader: impl BufRead) -> Vec<Token> {
     let token_patterns = vec![
         // single characters
         r"[\{}()\[\]]",
-        // numbers (TODO: properly handle rationals)
-        r"-?\d+(\.\d*)?(/\d+(\.\d*)?)?",
+        // <numbers>
+        // integers
+        r"-?\d+(\.\d*)?",
+        // rationals
+        r"-?\d+(\.\d*)?/\d+(\.\d*)?",
+        // floats (including scientific notation)
+        r"-?\d+(\.\d*)?[eE]-?\d+(\.\d*)?",
+        // complex numbers
+        r"-?\d+(\.\d*)?[+-]-?\d+(\.\d*)?i",
+        // hex literals
+        r"0x[0-9a-fA-F]+",
+        // </numbers>
         // strings
         "\"(\\.|[^\"])*\"",
         // alphanumeric identifiers
@@ -45,7 +55,7 @@ pub fn tokenize(reader: impl BufRead) -> Vec<Token> {
             // Read the next token (patterns above)
             if let Some(c) = token_regex.captures(line) {
                 // Ignore comments
-                if c[0].starts_with('#') { 
+                if c[0].starts_with('#') {
                     break;
                 }
 

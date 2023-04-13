@@ -1,7 +1,7 @@
 # Set image dimensions and maximum number of iterations
-1024 @width
-1024 @height
-256 @max_iterations
+128 @width
+128 @height
+16 @max_iterations
 
 # Set the range of complex numbers to visualize
 -2.0 @min_real

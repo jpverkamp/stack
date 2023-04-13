@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use crate::types::Value;
-use std::{collections::HashMap, rc::Rc, fmt::Display};
+use std::{collections::HashMap, fmt::Display, rc::Rc};
 
 /// A stack in the context of the VM
 ///
@@ -24,7 +24,7 @@ impl Stack {
     }
 
     /// Creates a new stack with the current stack as its parent
-    /// 
+    ///
     /// n is the number of values to pop from the parent stack and push onto this one
     pub fn extend(&mut self, n: usize) -> Self {
         let mut values = vec![];
@@ -46,7 +46,7 @@ impl Stack {
     }
 
     /// Pops a value off the stack
-    /// 
+    ///
     /// TODO: Handle popping a named value
     pub fn pop(&mut self) -> Option<Value> {
         self.data.pop()
@@ -85,7 +85,6 @@ impl Stack {
     }
 }
 
-
 impl Display for Stack {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut s = String::new();
@@ -111,5 +110,5 @@ impl Display for Stack {
         }
         s.push(']');
         write!(f, "{}", s)
-    }    
+    }
 }

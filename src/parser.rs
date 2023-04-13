@@ -1,3 +1,4 @@
+use crate::numbers::Number;
 use crate::types::{Expression, Token, Value};
 
 /// Parses a vector of tokens into a vector of expressions.
@@ -33,9 +34,15 @@ pub fn parse(tokens: Vec<Token>) -> Expression {
         } else {
             // Try to parse each literal value, if none match assume it's an identifier
             if let Some(v) = tokens[0].token.parse::<i64>().ok() {
-                (Expression::Literal(Value::Integer(v)), &tokens[1..])
+                (
+                    Expression::Literal(Value::Number(Number::Integer(v))),
+                    &tokens[1..],
+                )
             } else if let Some(v) = tokens[0].token.parse::<f64>().ok() {
-                (Expression::Literal(Value::Float(v)), &tokens[1..])
+                (
+                    Expression::Literal(Value::Number(Number::Float(v))),
+                    &tokens[1..],
+                )
             } else if tokens[0].token.starts_with("\"") {
                 (
                     Expression::Literal(Value::String(tokens[0].token.clone())),

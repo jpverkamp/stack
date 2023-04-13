@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+use crate::numbers::Number;
 use std::fmt::Display;
 
 /// A token is a single unit of a program.
@@ -13,41 +14,49 @@ pub struct Token {
     pub token: String,
 }
 
+impl Display for Number {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Number::Integer(v) => v.to_string(),
+                Number::Float(v) => v.to_string(),
+            }
+        )
+    }
+}
+
 /// A value is a literal value that has been evaluated.
 #[derive(Clone, Debug)]
 #[repr(u8)]
 pub enum Value {
-    /// An empty value
-    Null,
-    /// An integer value
-    Integer(i64),
-    /// A floating point value
-    Float(f64),
-    /// A literal string value
+    Number(Number),
     String(String),
-    /// A boolean value
     Boolean(bool),
-    /// An executable block with stored arity
     Block {
-        /// The number of parameters popped from the stack when this block is called
         arity_in: usize,
-        /// The number of values pushed to the stack when this block is done
         arity_out: usize,
-        /// The block itself
         expression: Box<Expression>,
     },
 }
 
 impl Display for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", match self {
-            Value::Null => "null".to_string(),
-            Value::Integer(v) => v.to_string(),
-            Value::Float(v) => v.to_string(),
-            Value::String(v) => v.to_string().trim_matches('"').to_string(),
-            Value::Boolean(v) => v.to_string(),
-            Value::Block { arity_in, arity_out, .. } => format!("{{{}->{}}}", arity_in, arity_out),
-        })
+        write!(
+            f,
+            "{}",
+            match self {
+                Value::Number(v) => v.to_string(),
+                Value::String(v) => v.to_string().trim_matches('"').to_string(),
+                Value::Boolean(v) => v.to_string(),
+                Value::Block {
+                    arity_in,
+                    arity_out,
+                    ..
+                } => format!("{{{}->{}}}", arity_in, arity_out),
+            }
+        )
     }
 }
 
@@ -76,20 +85,18 @@ pub enum Expression {
 }
 
 macro_rules! write_children {
-    ($f:ident $prefix:literal $children:ident $suffix:literal) => {
-        {
-            let mut s = String::new();
-            s.push($prefix);
-            for (i, child) in $children.iter().enumerate() {
-                s.push_str(&format!("{}", child));
-                if i != $children.len() - 1 {
-                    s.push(' ');
-                }
+    ($f:ident $prefix:literal $children:ident $suffix:literal) => {{
+        let mut s = String::new();
+        s.push($prefix);
+        for (i, child) in $children.iter().enumerate() {
+            s.push_str(&format!("{}", child));
+            if i != $children.len() - 1 {
+                s.push(' ');
             }
-            s.push($suffix);
-            write!($f, "{}", s)
         }
-    }
+        s.push($suffix);
+        write!($f, "{}", s)
+    }};
 }
 
 impl Display for Expression {
@@ -97,9 +104,9 @@ impl Display for Expression {
         match self {
             Expression::Identifier(id) => write!(f, "{}", id),
             Expression::Literal(value) => write!(f, "{}", value),
-            Expression::Block(children) => write_children!{f '{' children '}'},
-            Expression::List(children) => write_children!{f '[' children ']'},
-            Expression::Group(children) => write_children!{f '(' children ')'},
+            Expression::Block(children) => write_children! {f '{' children '}'},
+            Expression::List(children) => write_children! {f '[' children ']'},
+            Expression::Group(children) => write_children! {f '(' children ')'},
             Expression::At(expr) => write!(f, "@{}", expr),
             Expression::Bang(expr) => write!(f, "!{}", expr),
             Expression::Dollar(expr) => write!(f, "${}", expr),

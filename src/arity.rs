@@ -1,16 +1,18 @@
-use crate::types::{Value, Expression};
+use crate::numbers::Number;
+use crate::types::{Expression, Value};
 
 #[allow(dead_code)]
 pub fn calculate_arity(expression: &Expression) -> Result<(usize, usize), String> {
     log::debug!("calculate_arity({expression})");
 
     match expression {
-        Expression::Identifier(id) => {
-            match id.as_str() {
-                "+" | "-" | "*" | "/" | "%" => Ok((2, 1)),
-                "<" | "<=" | ">" | ">=" | "==" | "!=" => Ok((2, 1)),
-                _ => panic!("unknown id to calculate arity of: {} (may need to explicitly specify it)", id)
-            }
+        Expression::Identifier(id) => match id.as_str() {
+            "+" | "-" | "*" | "/" | "%" => Ok((2, 1)),
+            "<" | "<=" | ">" | ">=" | "==" | "!=" => Ok((2, 1)),
+            _ => panic!(
+                "unknown id to calculate arity of: {} (may need to explicitly specify it)",
+                id
+            ),
         },
         Expression::Literal(_) => Ok((0, 1)),
         Expression::Block(children) => {
@@ -22,24 +24,30 @@ pub fn calculate_arity(expression: &Expression) -> Result<(usize, usize), String
             // @[] means the block takes the number of inputs in the list
             // !# means the block returns # outputs
             // No !# means the block returns 1 output
-            // TODO: Named output? 
+            // TODO: Named output?
 
             let mut arity_in = None;
             let mut arity_out = None;
 
-            // If the first child is an @ set the arity in from that 
+            // If the first child is an @ set the arity in from that
             if let Some(Expression::At(body)) = children.first() {
                 match body.as_ref() {
-                    Expression::Literal(Value::Integer(v)) => { arity_in = Some(*v as usize) },
-                    Expression::Identifier(_) => { arity_in = Some(1) },
-                    Expression::List(values) => { arity_in = Some(values.len()); },
-                    _ => {},
+                    Expression::Literal(Value::Number(Number::Integer(v))) => {
+                        arity_in = Some(*v as usize)
+                    }
+                    Expression::Identifier(_) => arity_in = Some(1),
+                    Expression::List(values) => {
+                        arity_in = Some(values.len());
+                    }
+                    _ => {}
                 }
 
                 if let Some(Expression::Bang(body)) = children.get(1) {
                     match body.as_ref() {
-                        Expression::Literal(Value::Integer(v)) => { arity_out = Some(*v as usize); },
-                        _ => {},
+                        Expression::Literal(Value::Number(Number::Integer(v))) => {
+                            arity_out = Some(*v as usize);
+                        }
+                        _ => {}
                     }
                 }
             }
@@ -47,16 +55,24 @@ pub fn calculate_arity(expression: &Expression) -> Result<(usize, usize), String
             // If the first child is an ! set the arity out from that
             if let Some(Expression::Bang(body)) = children.first() {
                 match body.as_ref() {
-                    Expression::Literal(Value::Integer(v)) => { arity_out = Some(*v as usize); },
-                    _ => {},
+                    Expression::Literal(Value::Number(Number::Integer(v))) => {
+                        arity_out = Some(*v as usize);
+                    }
+                    _ => {}
                 }
 
                 if let Some(Expression::At(body)) = children.get(1) {
                     match body.as_ref() {
-                        Expression::Literal(Value::Integer(v)) => { arity_in = Some(*v as usize); },
-                        Expression::Identifier(_) => { arity_in = Some(1); },
-                        Expression::List(values) => { arity_in = Some(values.len()); },
-                        _ => {},
+                        Expression::Literal(Value::Number(Number::Integer(v))) => {
+                            arity_in = Some(*v as usize);
+                        }
+                        Expression::Identifier(_) => {
+                            arity_in = Some(1);
+                        }
+                        Expression::List(values) => {
+                            arity_in = Some(values.len());
+                        }
+                        _ => {}
                     }
                 }
             }
@@ -70,7 +86,7 @@ pub fn calculate_arity(expression: &Expression) -> Result<(usize, usize), String
             // Otherwise, we're attempting to determine a 'simple' arity, no custom functions
             // This is done by counting the number of inputs and outputs
             // In this case, the output arity is always 1
-            // TODO: Handle the !# case better here? 
+            // TODO: Handle the !# case better here?
 
             let mut depth = 0;
             let mut min_depth = 0;
@@ -83,31 +99,40 @@ pub fn calculate_arity(expression: &Expression) -> Result<(usize, usize), String
                 } else {
                     return Err(format!("Cannot derive the arity of {}", expression.clone()));
                 }
-                
             }
 
             log::debug!("Custom implicity arity: in={min_depth} out=1");
             Ok(((0 - min_depth) as usize, 1))
+        }
+        Expression::List(_) => Err(format!(
+            "Cannot calculate the arity of a list: {}",
+            expression.clone()
+        )),
+        Expression::Group(_) => Err(format!(
+            "Cannot calculate the arity of a group: {}",
+            expression.clone()
+        )),
+        Expression::At(body) => match body.as_ref() {
+            Expression::Identifier(_) => Ok((0, 1)),
+            _ => Err(format!(
+                "Cannot calculate the arity of a non-named @ expression: {}",
+                expression
+            )
+            .clone()),
         },
-        Expression::List(_) => Err(format!("Cannot calculate the arity of a list: {}", expression.clone())),
-        Expression::Group(_) => Err(format!("Cannot calculate the arity of a group: {}", expression.clone())),
-        Expression::At(body) => {
-            match body.as_ref() {
-                Expression::Identifier(_) => Ok((0, 1)),
-                _ => Err(format!("Cannot calculate the arity of a non-named @ expression: {}", expression).clone())
-            }
+        Expression::Bang(body) => match body.as_ref() {
+            Expression::Identifier(_) => Ok((1, 0)),
+            _ => Err(format!(
+                "Cannot calculate the arity of a non-named ! expression: {}",
+                expression.clone()
+            )),
         },
-        Expression::Bang(body) => {
-            match body.as_ref() {
-                Expression::Identifier(_) => Ok((1, 0)),
-                _ => Err(format!("Cannot calculate the arity of a non-named ! expression: {}", expression.clone()))
-            }
-        },
-        Expression::Dollar(body) => {
-            match body.as_ref() {
-                Expression::Identifier(_) => Ok((0, 1)),
-                _ => Err(format!("Cannot calculate the arity of a non-named $ expression: {}", expression.clone()))
-            }
+        Expression::Dollar(body) => match body.as_ref() {
+            Expression::Identifier(_) => Ok((0, 1)),
+            _ => Err(format!(
+                "Cannot calculate the arity of a non-named $ expression: {}",
+                expression.clone()
+            )),
         },
     }
 }
