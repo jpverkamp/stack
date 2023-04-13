@@ -1,0 +1,9 @@
+{
+    @forever !0
+    read
+    "echo: " write 
+    writeln
+    forever
+} @forever
+
+$forever forever

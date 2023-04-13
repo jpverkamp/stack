@@ -1,0 +1,86 @@
+# Set image dimensions and maximum number of iterations
+read int @width
+read int @height
+read int @max_iterations
+
+# Set the range of complex numbers to visualize
+-2.0 @min_real
+1.0 @max_real
+-1.0 @min_imag
+1.0 @max_imag
+
+# Calculate the step sizes for the real and imaginary parts
+max_real min_real - width / @real_step
+max_imag min_imag - height / @imag_step
+
+{
+  @[ar ai br bi] !2
+  ar br * ai bi * - 
+  ar bi * ai br * +
+} @cmul
+
+{
+  @[ar ai br bi] !2
+  ar br +
+  ai bi +
+} @cadd
+
+{
+  @[r i]
+  r i * r i * +
+} @cmag2
+
+{ 
+  @[px py max_iter]
+  
+  {
+    @[zx zy i iter] 
+    
+    0
+    {
+      @0 !1
+      i
+      { 
+        @0 !1
+        zx zy zx zy cmul px py cadd
+        i 1 +
+        $iter iter
+      }
+      zx zy cmag2 4.0 > if
+    } 
+    i max_iter == if
+
+  } @iter
+
+  px py 1 $iter iter
+} @mandelbrot
+
+# Write the PPM header
+"P3" writeln
+width writeln
+height writeln
+"255" writeln
+
+# Loop through image rows (y) and columns (x)
+{
+    @y
+    {
+        @x
+
+        # Calculate the current complex number (real + imag * i)
+        x real_step * min_real + @real
+        y imag_step * min_imag + @imag
+
+        # Calculate the number of iterations for the current complex number
+        real imag max_iterations mandelbrot @iterations
+
+        # Scale the number of iterations to a color value (assuming grayscale)
+        1.0 iterations * max_iterations / 255 * int @color
+
+        # Write the color value to the PPM file (red, green, blue)
+        color write " " write
+        color write " " write
+        color write " " write
+    } width loop
+    newline
+} height loop

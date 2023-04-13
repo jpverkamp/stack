@@ -123,6 +123,18 @@ pub fn evaluate(ast: Expression) {
                             _ => panic!("apply expects a block, got {}", block),
                         }
                     }
+                    // Read a line from stdin as a string
+                    "read" => {
+                        let mut input = String::new();
+                        match std::io::stdin().read_line(&mut input) {
+                            Ok(_) => {
+                                stack.push(Value::String(input.trim_end_matches('\n').to_string()));
+                            },
+                            Err(e) => {
+                                panic!("failed to read from stdin: {e}");
+                            },
+                        };
+                    }
                     // Pop and write a value to stdout
                     "write" => {
                         print!("{}", stack.pop().unwrap());
