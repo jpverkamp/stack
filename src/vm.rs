@@ -18,9 +18,7 @@ pub fn evaluate(ast: Expression) {
 
             match (a.clone(), b.clone()) {
                 (Value::Number(a), Value::Number(b)) => {
-                    let (a, b) = Number::coerce(a, b);
-                    let result = $f(a, b);
-                    $stack.push(Value::Number(result));
+                    $stack.push(Value::Number($f(a, b)));
                 }
                 _ => panic!(
                     "cannot perform numeric operation on non-numeric values, got {} and {}",
@@ -39,9 +37,7 @@ pub fn evaluate(ast: Expression) {
 
             match (a.clone(), b.clone()) {
                 (Value::Number(a), Value::Number(b)) => {
-                    let (a, b) = Number::coerce(a, b);
-                    let result = $f(a, b);
-                    $stack.push(Value::Boolean(result));
+                    $stack.push(Value::Boolean($f(a, b)));
                 }
                 // TODO: Handle other types
                 _ => panic!(
