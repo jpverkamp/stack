@@ -108,7 +108,7 @@ pub fn evaluate(ast: Expression) {
                             Value::Number(n) => stack.push(Value::Number(n.to_integer())),
                             _ => panic!("int cannot, got {}", value),
                         }
-                    },
+                    }
                     // Apply a block to the stack
                     "apply" => {
                         let block = stack.pop().unwrap();
@@ -122,31 +122,31 @@ pub fn evaluate(ast: Expression) {
                             }
                             _ => panic!("apply expects a block, got {}", block),
                         }
-                    },
+                    }
                     // Read a line from stdin as a string
                     "read" => {
                         let mut input = String::new();
                         match std::io::stdin().read_line(&mut input) {
                             Ok(_) => {
                                 stack.push(Value::String(input.trim_end_matches('\n').to_string()));
-                            },
+                            }
                             Err(e) => {
                                 panic!("failed to read from stdin: {e}");
-                            },
+                            }
                         };
-                    },
+                    }
                     // Pop and write a value to stdout
                     "write" => {
                         print!("{}", stack.pop().unwrap());
-                    },
+                    }
                     // Pop and write a value to stdout with a newline
                     "writeln" => {
                         println!("{}", stack.pop().unwrap());
-                    },
+                    }
                     // Write a newline
                     "newline" => {
                         println!();
-                    },
+                    }
                     // Loop over an iterable, expects a block and an iterable
                     "loop" => {
                         let iterable = stack.pop().unwrap();
@@ -183,7 +183,7 @@ pub fn evaluate(ast: Expression) {
                             },
                             _ => panic!("loop must have an iterable (currently an integer or string), got {}", iterable),
                         };
-                    },
+                    }
                     // If statement, expects two blocks or literals and a conditional (must be boolean)
                     "if" => {
                         let condition = stack.pop().unwrap();
@@ -224,7 +224,7 @@ pub fn evaluate(ast: Expression) {
                                 stack.push(branch);
                             }
                         }
-                    },
+                    }
                     name => {
                         if let Some(value) = stack.get_named(String::from(name)) {
                             if let Value::Block {
@@ -240,7 +240,7 @@ pub fn evaluate(ast: Expression) {
                         } else {
                             panic!("Unknown identifier {:?}", name);
                         }
-                    },
+                    }
                 }
             }
             // Literal values are just pushed onto the stack
