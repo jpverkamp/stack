@@ -64,6 +64,8 @@ impl PartialEq for Number {
     }
 }
 
+impl Eq for Number {}
+
 impl PartialOrd for Number {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         let (a, b) = Number::coerce(*self, *other);

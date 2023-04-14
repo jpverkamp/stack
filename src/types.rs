@@ -4,7 +4,7 @@ use crate::numbers::Number;
 use std::fmt::Display;
 
 /// A token is a single unit of a program.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Token {
     /// The row of the token in the source code.
     pub row: usize,
@@ -28,7 +28,7 @@ impl Display for Number {
 }
 
 /// A value is a literal value that has been evaluated.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 #[repr(u8)]
 pub enum Value {
     Number(Number),
@@ -61,7 +61,7 @@ impl Display for Value {
 }
 
 /// An expression is a single unit of a program, part of the AST
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Expression {
     /// An identifier/variable, used to lookup a named value or global
     Identifier(String),

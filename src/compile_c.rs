@@ -1,5 +1,5 @@
 use crate::numbers::Number;
-use crate::types::{Value, Expression};
+use crate::types::{Expression, Value};
 
 /// A helper macro to generate functions that operate on two integers and floats
 macro_rules! numeric_binop {
@@ -26,7 +26,8 @@ macro_rules! numeric_binop {
 
 pub fn compile(ast: Expression) -> String {
     let mut lines = vec![];
-    lines.push("
+    lines.push(
+        "
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -79,7 +80,9 @@ int main(int argc, char *argv[]) {
     Value** frames = malloc(1024 * sizeof(Value*));
     Value** frame_ptr = frames;
 
-".to_string());
+"
+        .to_string(),
+    );
 
     fn compile_expr(expr: Expression) -> Vec<String> {
         let mut lines = vec![];
@@ -95,9 +98,10 @@ int main(int argc, char *argv[]) {
                     "/" => numeric_binop!(lines, "/"),
                     "%" => numeric_binop!(lines, "%"),
 
-                    // Built ins 
+                    // Built ins
                     "writeln" => {
-                        lines.push("
+                        lines.push(
+                            "
     {
         Value v = *(stack_ptr--);
         if (v.type == TAG_NUMBER_INTEGER) {
@@ -112,43 +116,40 @@ int main(int argc, char *argv[]) {
             // TODO: Error
         }
     }
-".to_string());
+"
+                            .to_string(),
+                        );
                     }
 
                     // Unknown identifier
                     // _ => panic!("Unknown identifier: {}", id),
-                    _ => {},
+                    _ => {}
                 }
-                
-            },
+            }
             Expression::Literal(value) => {
                 let (tag, field, value) = match value {
                     // TODO: additional numeric tyhpes
-                    Value::Number(Number::Integer(v)) => (
-                        "TAG_NUMBER_INTEGER",
-                        "integer",
-                        v.to_string()
-                    ),
-                    Value::Number(Number::Float(v)) => (
-                        "TAG_NUMBER_FLOAT",
-                        "float",
-                        v.to_string()
-                    ),
+                    Value::Number(Number::Integer(v)) => {
+                        ("TAG_NUMBER_INTEGER", "integer", v.to_string())
+                    }
+                    Value::Number(Number::Float(v)) => ("TAG_NUMBER_FLOAT", "float", v.to_string()),
                     Value::String(_v) => todo!(),
                     Value::Boolean(_v) => todo!(),
                     Value::Block { .. } => todo!(),
                 };
 
-                lines.push(format!("
+                lines.push(format!(
+                    "
     {{
         Value v = {{.type={tag}, .as_{field}={value}}};
         *(++stack_ptr) = v;
     }}
-"));
-            },
+"
+                ));
+            }
             Expression::Block(_) => {
                 todo!();
-            },
+            }
             Expression::List(_) => todo!(),
             Expression::Group(exprs) => {
                 for expr in exprs {
@@ -156,10 +157,10 @@ int main(int argc, char *argv[]) {
                         lines.push(line);
                     }
                 }
-            },
+            }
             Expression::At(_) => {
                 todo!();
-            },
+            }
             Expression::Bang(_) => todo!(),
             Expression::Dollar(_) => todo!(),
         }
@@ -171,11 +172,14 @@ int main(int argc, char *argv[]) {
         lines.push(line);
     }
 
-    lines.push("
+    lines.push(
+        "
 
     return 0;
 }
-".to_string());
+"
+        .to_string(),
+    );
 
     lines.join("\n")
 }
