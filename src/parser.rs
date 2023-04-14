@@ -45,7 +45,7 @@ pub fn parse(tokens: Vec<Token>) -> Expression {
                 )
             } else if tokens[0].token.starts_with("\"") {
                 (
-                    Expression::Literal(Value::String(tokens[0].token.clone())),
+                    Expression::Literal(Value::String(tokens[0].token.trim_matches('"').to_string())),
                     &tokens[1..],
                 )
             } else if tokens[0].token == "true" || tokens[0].token == "false" {
@@ -84,4 +84,178 @@ pub fn parse(tokens: Vec<Token>) -> Expression {
     // Parse the entire stream
     // TODO: This should be an exception if the stream is not empty after this
     Expression::Group(parse_until(tokens.as_slice(), None).0)
+}
+
+#[cfg(test)]
+mod test {
+    use crate::lexer::tokenize;
+    use crate::numbers::Number;
+    use crate::parser::parse;
+    use crate::types::{Expression, Value};
+
+    #[test]
+    fn test_integer() {
+        let input = tokenize("123".as_bytes());
+        let output = parse(input);
+        assert_eq!(
+            output,
+            Expression::Group(vec![Expression::Literal(Value::Number(Number::Integer(
+                123
+            )))])
+        );
+    }
+
+    #[test]
+    fn test_float() {
+        let input = tokenize("123.456".as_bytes());
+        let output = parse(input);
+        assert_eq!(
+            output,
+            Expression::Group(vec![Expression::Literal(Value::Number(Number::Float(
+                123.456
+            )))])
+        );
+    }
+
+    #[test]
+    fn test_string_literal() {
+        let input = tokenize("\"hello world\"".as_bytes());
+        let output = parse(input);
+        assert_eq!(
+            output,
+            Expression::Group(vec![Expression::Literal(Value::String(
+                String::from("hello world")
+            ))])
+        );
+    }
+
+    #[test]
+    fn test_boolean_literal() {
+        let input = tokenize("true".as_bytes());
+        let output = parse(input);
+        assert_eq!(
+            output,
+            Expression::Group(vec![Expression::Literal(Value::Boolean(true))])
+        );
+    }
+
+    #[test]
+    fn test_simple_addition() {
+        let input = tokenize("1 2 +".as_bytes());
+        let output = parse(input);
+        assert_eq!(
+            output,
+            Expression::Group(vec![
+                Expression::Literal(Value::Number(Number::Integer(1))),
+                Expression::Literal(Value::Number(Number::Integer(2))),
+                Expression::Identifier(String::from("+")),
+            ])
+        );
+    }
+
+    #[test]
+    fn test_naming() {
+        let input = tokenize("@a".as_bytes());
+        let output = parse(input);
+        assert_eq!(
+            output,
+            Expression::Group(vec![Expression::At(Box::new(Expression::Identifier(
+                String::from("a")
+            )))])
+        );
+    }
+
+    #[test]
+    fn test_list_naming() {
+        let input = tokenize("@[a b c]".as_bytes());
+        let output = parse(input);
+        assert_eq!(
+            output,
+            Expression::Group(vec![Expression::At(Box::new(Expression::List(vec![
+                Expression::Identifier(String::from("a")),
+                Expression::Identifier(String::from("b")),
+                Expression::Identifier(String::from("c")),
+            ])))])
+        );
+    }
+
+    #[test]
+    fn test_simple_block() {
+        let input = tokenize("{ 1 2 + }".as_bytes());
+        let output = parse(input);
+        assert_eq!(
+            output,
+            Expression::Group(vec![Expression::Block(vec![
+                Expression::Literal(Value::Number(Number::Integer(1))),
+                Expression::Literal(Value::Number(Number::Integer(2))),
+                Expression::Identifier(String::from("+")),
+            ])])
+        );
+    }
+
+    #[test]
+    fn test_assignment_bang() {
+        let input = tokenize("1 !a a a +".as_bytes());
+        let output = parse(input);
+        assert_eq!(
+            output,
+            Expression::Group(vec![
+                Expression::Literal(Value::Number(Number::Integer(1))),
+                Expression::Bang(Box::new(Expression::Identifier(String::from("a")))),
+                Expression::Identifier(String::from("a")),
+                Expression::Identifier(String::from("a")),
+                Expression::Identifier(String::from("+")),
+            ])
+        );
+    }
+
+    #[test]
+    fn test_factorial() {
+        let input = tokenize("
+{
+  @[n fact]
+  1
+  { @0 n 1 - $fact fact n * }
+  n 1 < if
+} @fact
+
+5 $fact fact writeln".as_bytes());
+        let output = parse(input);
+        assert_eq!(
+            output,
+            Expression::Group(vec![
+                Expression::Block(vec![
+                    Expression::At(Box::new(Expression::List(vec![
+                        Expression::Identifier(String::from("n")),
+                        Expression::Identifier(String::from("fact")),
+                    ]))),
+                    Expression::Literal(Value::Number(Number::Integer(1))),
+                    Expression::Block(vec![
+                        Expression::At(Box::new(
+                            Expression::Literal(Value::Number(Number::Integer(0))),
+                        )),
+                        Expression::Identifier(String::from("n")),
+                        Expression::Literal(Value::Number(Number::Integer(1))),
+                        Expression::Identifier(String::from("-")),
+                        Expression::Dollar(Box::new(Expression::Identifier(String::from(
+                            "fact"
+                        )))),
+                        Expression::Identifier(String::from("fact")),
+                        Expression::Identifier(String::from("n")),
+                        Expression::Identifier(String::from("*")),
+                    ]),
+                    Expression::Identifier(String::from("n")),
+                    Expression::Literal(Value::Number(Number::Integer(1))),
+                    Expression::Identifier(String::from("<")),
+                    Expression::Identifier(String::from("if")),
+                ]),
+                Expression::At(Box::new(Expression::Identifier(String::from("fact")))),
+                Expression::Literal(Value::Number(Number::Integer(5))),
+                Expression::Dollar(Box::new(Expression::Identifier(String::from("fact")))),
+                Expression::Identifier(String::from("fact")),
+                Expression::Identifier(String::from("writeln")),
+            ])
+        );
+
+    }
 }
