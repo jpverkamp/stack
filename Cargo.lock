@@ -329,7 +329,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "stack"
+name = "stacklang"
 version = "0.1.0"
 dependencies = [
  "clap",
