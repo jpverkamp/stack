@@ -259,3 +259,334 @@ Compiler is a work in progress, but will use:
 ```
 cargo run --file fact.stack --compile
 ```
+
+## Justfile
+
+To run an example:
+
+```
+just example-run fibonacci-acc
+```
+
+## Logging
+
+Logging is available with `RUST_LOG={level}`. 
+
+* `INFO` will log execution context at each step (lex, parse, and each eval step)
+* `DEBUG` will log much more verbose data if needed
+
+### Example logging of fibonacci-acc with n=5
+
+```
+┌ ^_^ jp@Mercury {git main} ~/Projects/stacklang
+└ RUST_LOG=info just example-run fibonacci-acc
+
+cargo run -- --file examples/fibonacci-acc.stack
+    Finished dev [unoptimized + debuginfo] target(s) in 0.05s
+     Running `target/debug/stack --file examples/fibonacci-acc.stack`
+ INFO  stack > Tokens: { @ n { @ [ n a b fibacc ] b { @ 0 ! 1 n 1 - a b + a $ fibacc fibacc } n 1 <= if } @ fibacc n 1 1 $ fibacc fibacc } @ fib 5 fib writeln
+ INFO  stack > AST:
+Group(
+    [
+        Block(
+            [
+                At(
+                    Identifier(
+                        "n",
+                    ),
+                ),
+                Block(
+                    [
+                        At(
+                            List(
+                                [
+                                    Identifier(
+                                        "n",
+                                    ),
+                                    Identifier(
+                                        "a",
+                                    ),
+                                    Identifier(
+                                        "b",
+                                    ),
+                                    Identifier(
+                                        "fibacc",
+                                    ),
+                                ],
+                            ),
+                        ),
+                        Identifier(
+                            "b",
+                        ),
+                        Block(
+                            [
+                                At(
+                                    Literal(
+                                        Number(
+                                            Integer(
+                                                0,
+                                            ),
+                                        ),
+                                    ),
+                                ),
+                                Bang(
+                                    Literal(
+                                        Number(
+                                            Integer(
+                                                1,
+                                            ),
+                                        ),
+                                    ),
+                                ),
+                                Identifier(
+                                    "n",
+                                ),
+                                Literal(
+                                    Number(
+                                        Integer(
+                                            1,
+                                        ),
+                                    ),
+                                ),
+                                Identifier(
+                                    "-",
+                                ),
+                                Identifier(
+                                    "a",
+                                ),
+                                Identifier(
+                                    "b",
+                                ),
+                                Identifier(
+                                    "+",
+                                ),
+                                Identifier(
+                                    "a",
+                                ),
+                                Dollar(
+                                    Identifier(
+                                        "fibacc",
+                                    ),
+                                ),
+                                Identifier(
+                                    "fibacc",
+                                ),
+                            ],
+                        ),
+                        Identifier(
+                            "n",
+                        ),
+                        Literal(
+                            Number(
+                                Integer(
+                                    1,
+                                ),
+                            ),
+                        ),
+                        Identifier(
+                            "<=",
+                        ),
+                        Identifier(
+                            "if",
+                        ),
+                    ],
+                ),
+                At(
+                    Identifier(
+                        "fibacc",
+                    ),
+                ),
+                Identifier(
+                    "n",
+                ),
+                Literal(
+                    Number(
+                        Integer(
+                            1,
+                        ),
+                    ),
+                ),
+                Literal(
+                    Number(
+                        Integer(
+                            1,
+                        ),
+                    ),
+                ),
+                Dollar(
+                    Identifier(
+                        "fibacc",
+                    ),
+                ),
+                Identifier(
+                    "fibacc",
+                ),
+            ],
+        ),
+        At(
+            Identifier(
+                "fib",
+            ),
+        ),
+        Literal(
+            Number(
+                Integer(
+                    5,
+                ),
+            ),
+        ),
+        Identifier(
+            "fib",
+        ),
+        Identifier(
+            "writeln",
+        ),
+    ],
+)
+ INFO  stack::vm > eval(({@n {@[n a b fibacc] b {@0 !1 n 1 - a b + a $fibacc fibacc} n 1 <= if} @fibacc n 1 1 $fibacc fibacc} @fib 5 fib writeln), [])
+ INFO  stack::vm > eval({@n {@[n a b fibacc] b {@0 !1 n 1 - a b + a $fibacc fibacc} n 1 <= if} @fibacc n 1 1 $fibacc fibacc}, [])
+ INFO  stack::vm > eval(@fib, [{1->1}])
+ INFO  stack::vm > eval(5, [{1->1}@fib])
+ INFO  stack::vm > eval(fib, [{1->1}@fib 5])
+ INFO  stack::vm > eval((@n {@[n a b fibacc] b {@0 !1 n 1 - a b + a $fibacc fibacc} n 1 <= if} @fibacc n 1 1 $fibacc fibacc), [{1->1}@fib] : [5])
+ INFO  stack::vm > eval(@n, [{1->1}@fib] : [5])
+ INFO  stack::vm > eval({@[n a b fibacc] b {@0 !1 n 1 - a b + a $fibacc fibacc} n 1 <= if}, [{1->1}@fib] : [5@n])
+ INFO  stack::vm > eval(@fibacc, [{1->1}@fib] : [5@n {4->1}])
+ INFO  stack::vm > eval(n, [{1->1}@fib] : [5@n {4->1}@fibacc])
+ INFO  stack::vm > eval(1, [{1->1}@fib] : [5@n {4->1}@fibacc 5])
+ INFO  stack::vm > eval(1, [{1->1}@fib] : [5@n {4->1}@fibacc 5 1])
+ INFO  stack::vm > eval($fibacc, [{1->1}@fib] : [5@n {4->1}@fibacc 5 1 1])
+ INFO  stack::vm > eval(fibacc, [{1->1}@fib] : [5@n {4->1}@fibacc 5 1 1 {4->1}])
+ INFO  stack::vm > eval((@[n a b fibacc] b {@0 !1 n 1 - a b + a $fibacc fibacc} n 1 <= if), [{1->1}@fib] : [5@n {4->1}@fibacc] : [5 1 1 {4->1}])
+ INFO  stack::vm > eval(@[n a b fibacc], [{1->1}@fib] : [5@n {4->1}@fibacc] : [5 1 1 {4->1}])
+ INFO  stack::vm > eval(b, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc])
+ INFO  stack::vm > eval({@0 !1 n 1 - a b + a $fibacc fibacc}, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc 1])
+ INFO  stack::vm > eval(n, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc 1 {0->1}])
+ INFO  stack::vm > eval(1, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc 1 {0->1} 5])
+ INFO  stack::vm > eval(<=, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc 1 {0->1} 5 1])
+ INFO  stack::vm > eval(if, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc 1 {0->1} false])
+ INFO  stack::vm > eval((@0 !1 n 1 - a b + a $fibacc fibacc), [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [])
+ INFO  stack::vm > eval(@0, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [])
+ INFO  stack::vm > eval(!1, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [])
+ INFO  stack::vm > eval(n, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [])
+ INFO  stack::vm > eval(1, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [5])
+ INFO  stack::vm > eval(-, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [5 1])
+ INFO  stack::vm > eval(a, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [4])
+ INFO  stack::vm > eval(b, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [4 1])
+ INFO  stack::vm > eval(+, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [4 1 1])
+ INFO  stack::vm > eval(a, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [4 2])
+ INFO  stack::vm > eval($fibacc, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [4 2 1])
+ INFO  stack::vm > eval(fibacc, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [4 2 1 {4->1}])
+ INFO  stack::vm > eval((@[n a b fibacc] b {@0 !1 n 1 - a b + a $fibacc fibacc} n 1 <= if), [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4 2 1 {4->1}])
+ INFO  stack::vm > eval(@[n a b fibacc], [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4 2 1 {4->1}])
+ INFO  stack::vm > eval(b, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc])
+ INFO  stack::vm > eval({@0 !1 n 1 - a b + a $fibacc fibacc}, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc 1])
+ INFO  stack::vm > eval(n, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc 1 {0->1}])
+ INFO  stack::vm > eval(1, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc 1 {0->1} 4])
+ INFO  stack::vm > eval(<=, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc 1 {0->1} 4 1])
+ INFO  stack::vm > eval(if, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc 1 {0->1} false])
+ INFO  stack::vm > eval((@0 !1 n 1 - a b + a $fibacc fibacc), [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [])
+ INFO  stack::vm > eval(@0, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [])
+ INFO  stack::vm > eval(!1, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [])
+ INFO  stack::vm > eval(n, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [])
+ INFO  stack::vm > eval(1, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [4])
+ INFO  stack::vm > eval(-, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [4 1])
+ INFO  stack::vm > eval(a, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [3])
+ INFO  stack::vm > eval(b, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [3 2])
+ INFO  stack::vm > eval(+, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [3 2 1])
+ INFO  stack::vm > eval(a, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [3 3])
+ INFO  stack::vm > eval($fibacc, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [3 3 2])
+ INFO  stack::vm > eval(fibacc, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [3 3 2 {4->1}])
+ INFO  stack::vm > eval((@[n a b fibacc] b {@0 !1 n 1 - a b + a $fibacc fibacc} n 1 <= if), [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3 3 2 {4->1}])
+ INFO  stack::vm > eval(@[n a b fibacc], [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3 3 2 {4->1}])
+ INFO  stack::vm > eval(b, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc])
+ INFO  stack::vm > eval({@0 !1 n 1 - a b + a $fibacc fibacc}, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc 2])
+ INFO  stack::vm > eval(n, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc 2 {0->1}])
+ INFO  stack::vm > eval(1, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc 2 {0->1} 3])
+ INFO  stack::vm > eval(<=, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc 2 {0->1} 3 1])
+ INFO  stack::vm > eval(if, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc 2 {0->1} false])
+ INFO  stack::vm > eval((@0 !1 n 1 - a b + a $fibacc fibacc), [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [])
+ INFO  stack::vm > eval(@0, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [])
+ INFO  stack::vm > eval(!1, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [])
+ INFO  stack::vm > eval(n, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [])
+ INFO  stack::vm > eval(1, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [3])
+ INFO  stack::vm > eval(-, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [3 1])
+ INFO  stack::vm > eval(a, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [2])
+ INFO  stack::vm > eval(b, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [2 3])
+ INFO  stack::vm > eval(+, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [2 3 2])
+ INFO  stack::vm > eval(a, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [2 5])
+ INFO  stack::vm > eval($fibacc, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [2 5 3])
+ INFO  stack::vm > eval(fibacc, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [2 5 3 {4->1}])
+ INFO  stack::vm > eval((@[n a b fibacc] b {@0 !1 n 1 - a b + a $fibacc fibacc} n 1 <= if), [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [] : [2 5 3 {4->1}])
+ INFO  stack::vm > eval(@[n a b fibacc], [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [] : [2 5 3 {4->1}])
+ INFO  stack::vm > eval(b, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [] : [2@n 5@a 3@b {4->1}@fibacc])
+ INFO  stack::vm > eval({@0 !1 n 1 - a b + a $fibacc fibacc}, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [] : [2@n 5@a 3@b {4->1}@fibacc 3])
+ INFO  stack::vm > eval(n, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [] : [2@n 5@a 3@b {4->1}@fibacc 3 {0->1}])
+ INFO  stack::vm > eval(1, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [] : [2@n 5@a 3@b {4->1}@fibacc 3 {0->1} 2])
+ INFO  stack::vm > eval(<=, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [] : [2@n 5@a 3@b {4->1}@fibacc 3 {0->1} 2 1])
+ INFO  stack::vm > eval(if, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [] : [2@n 5@a 3@b {4->1}@fibacc 3 {0->1} false])
+ INFO  stack::vm > eval((@0 !1 n 1 - a b + a $fibacc fibacc), [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [] : [2@n 5@a 3@b {4->1}@fibacc] : [])
+ INFO  stack::vm > eval(@0, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [] : [2@n 5@a 3@b {4->1}@fibacc] : [])
+ INFO  stack::vm > eval(!1, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [] : [2@n 5@a 3@b {4->1}@fibacc] : [])
+ INFO  stack::vm > eval(n, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [] : [2@n 5@a 3@b {4->1}@fibacc] : [])
+ INFO  stack::vm > eval(1, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [] : [2@n 5@a 3@b {4->1}@fibacc] : [2])
+ INFO  stack::vm > eval(-, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [] : [2@n 5@a 3@b {4->1}@fibacc] : [2 1])
+ INFO  stack::vm > eval(a, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [] : [2@n 5@a 3@b {4->1}@fibacc] : [1])
+ INFO  stack::vm > eval(b, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [] : [2@n 5@a 3@b {4->1}@fibacc] : [1 5])
+ INFO  stack::vm > eval(+, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [] : [2@n 5@a 3@b {4->1}@fibacc] : [1 5 3])
+ INFO  stack::vm > eval(a, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [] : [2@n 5@a 3@b {4->1}@fibacc] : [1 8])
+ INFO  stack::vm > eval($fibacc, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [] : [2@n 5@a 3@b {4->1}@fibacc] : [1 8 5])
+ INFO  stack::vm > eval(fibacc, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [] : [2@n 5@a 3@b {4->1}@fibacc] : [1 8 5 {4->1}])
+ INFO  stack::vm > eval((@[n a b fibacc] b {@0 !1 n 1 - a b + a $fibacc fibacc} n 1 <= if), [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [] : [2@n 5@a 3@b {4->1}@fibacc] : [] : [1 8 5 {4->1}])
+ INFO  stack::vm > eval(@[n a b fibacc], [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [] : [2@n 5@a 3@b {4->1}@fibacc] : [] : [1 8 5 {4->1}])
+ INFO  stack::vm > eval(b, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [] : [2@n 5@a 3@b {4->1}@fibacc] : [] : [1@n 8@a 5@b {4->1}@fibacc])
+ INFO  stack::vm > eval({@0 !1 n 1 - a b + a $fibacc fibacc}, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [] : [2@n 5@a 3@b {4->1}@fibacc] : [] : [1@n 8@a 5@b {4->1}@fibacc 5])
+ INFO  stack::vm > eval(n, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [] : [2@n 5@a 3@b {4->1}@fibacc] : [] : [1@n 8@a 5@b {4->1}@fibacc 5 {0->1}])
+ INFO  stack::vm > eval(1, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [] : [2@n 5@a 3@b {4->1}@fibacc] : [] : [1@n 8@a 5@b {4->1}@fibacc 5 {0->1} 1])
+ INFO  stack::vm > eval(<=, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [] : [2@n 5@a 3@b {4->1}@fibacc] : [] : [1@n 8@a 5@b {4->1}@fibacc 5 {0->1} 1 1])
+ INFO  stack::vm > eval(if, [{1->1}@fib] : [5@n {4->1}@fibacc] : [5@n 1@a 1@b {4->1}@fibacc] : [] : [4@n 2@a 1@b {4->1}@fibacc] : [] : [3@n 3@a 2@b {4->1}@fibacc] : [] : [2@n 5@a 3@b {4->1}@fibacc] : [] : [1@n 8@a 5@b {4->1}@fibacc 5 {0->1} true])
+ INFO  stack::vm > eval(writeln, [{1->1}@fib 5])
+5
+```
+
+# Tests
+
+There are currently test cases written for the lexer and parser:
+
+```
+┌ ^_^ jp@Mercury {git main} ~/Projects/stacklang
+└ cargo test
+
+    Finished test [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/main.rs (target/debug/deps/stack-8bce093d04ffb758)
+
+running 22 tests
+test lexer::test::test_float_scientific ... ok
+test lexer::test::test_floats ... ok
+test lexer::test::test_identifiers ... ok
+test lexer::test::test_brackets ... ok
+test lexer::test::test_integers ... ok
+test lexer::test::test_hex ... ok
+test lexer::test::test_binary ... ok
+test lexer::test::test_negative_integers ... ok
+test lexer::test::test_strings ... ok
+test lexer::test::test_rationals ... ok
+test lexer::test::test_prefixed ... ok
+test lexer::test::test_symbolic ... ok
+test parser::test::test_boolean_literal ... ok
+test parser::test::test_factorial ... ok
+test parser::test::test_naming ... ok
+test parser::test::test_assignment_bang ... ok
+test parser::test::test_integer ... ok
+test parser::test::test_list_naming ... ok
+test parser::test::test_float ... ok
+test parser::test::test_simple_block ... ok
+test parser::test::test_simple_addition ... ok
+test parser::test::test_string_literal ... ok
+
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+```
+
+Thank you Github Copilot. 
+
+More will be forthcoming. 
