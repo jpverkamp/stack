@@ -29,11 +29,10 @@ pub fn tokenize(reader: impl BufRead) -> Vec<Token> {
         // </numbers>
         // strings
         "\"(\\.|[^\"])*\"",
-        // alphanumeric identifiers
-        r"[a-zA-Z0-9_]+",
-        // symbolic identifier
-        // todo: quotes?
-        r"[^a-zA-Z0-9\s\{}()\[\]]+",
+        // basic identifiers, must start with a letter or _
+        r"[a-zA-Z][^\{}()\[\]\s\.]*",
+        // purely symbolic identifiers, cannot contain letters or numbers
+        r"[^a-zA-Z0-9\{}()\[\]\s\.]+",
     ];
     let token_regex = Regex::new(format!("^({})", token_patterns.join("|")).as_str()).unwrap();
     let whitespace_regex = Regex::new(r"^\s+").unwrap();
@@ -195,13 +194,14 @@ mod test {
 
     #[test]
     fn test_identifiers() {
-        let input = "test fact camelCase snake_case";
+        let input = "test fact camelCase snake_case with-symbols?";
         let tokens = super::tokenize(input.as_bytes());
-        assert_eq!(tokens.len(), 4);
+        assert_eq!(tokens.len(), 5);
         assert_eq!(tokens[0].token, "test");
         assert_eq!(tokens[1].token, "fact");
         assert_eq!(tokens[2].token, "camelCase");
         assert_eq!(tokens[3].token, "snake_case");
+        assert_eq!(tokens[4].token, "with-symbols?");
     }
 
     #[test]
