@@ -3,14 +3,32 @@
 use crate::numbers::Number;
 use std::fmt::Display;
 
+/// A span is a location in the source code.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Span {
+    pub name: Option<String>,
+    pub row: usize,
+    pub column: usize,
+    pub length: usize,
+}
+
+impl Display for Span {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}:{}:{}:{}",
+            self.name.as_ref().unwrap_or(&"<unknown>".to_string()),
+            self.row,
+            self.column,
+            self.length,
+        )
+    }
+}
+
 /// A token is a single unit of a program.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Token {
-    /// The row of the token in the source code.
-    pub row: usize,
-    /// The column of the token in the source code.
-    pub column: usize,
-    /// The token itself.
+    pub span: Span,
     pub token: String,
 }
 

@@ -3,7 +3,7 @@ use std::io::BufRead;
 use regex::Regex;
 use substring::Substring;
 
-use crate::types::Token;
+use crate::types::{Span, Token};
 
 /// Tokenizes a stream of characters into a vector of tokens.
 pub fn tokenize(reader: impl BufRead) -> Vec<Token> {
@@ -61,8 +61,12 @@ pub fn tokenize(reader: impl BufRead) -> Vec<Token> {
                 }
 
                 tokens.push(Token {
-                    row,
-                    column,
+                    span: Span {
+                        name: None, // TODO: set this
+                        row,
+                        column,
+                        length: c[0].len(),
+                    },
                     token: c[0].to_string(),
                 });
                 line = line.substring(c[0].len(), line.len());
