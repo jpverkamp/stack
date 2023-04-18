@@ -1,3 +1,6 @@
+use std::collections::HashMap;
+
+use crate::arity::calculate_arity;
 use crate::numbers::Number;
 use crate::types::{Expression, Value};
 
@@ -24,67 +27,71 @@ macro_rules! numeric_binop {
     }};
 }
 
-pub fn compile(ast: Expression) -> String {
-    let mut lines = vec![];
-    lines.push(
-        "
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
+fn collect_names(ast: &Expression) -> HashMap<String, usize> {
+    let mut names = HashMap::new();
 
-#define TAG_NUMBER          0
-#define TAG_NUMBER_INTEGER  1
-#define TAG_NUMBER_RATIONAL 2
-#define TAG_NUMBER_FLOAT    3
-#define TAG_NUMBER_COMPLEX  4
-
-#define TAG_STRING          16
-#define TAG_BOOLEAN         17
-#define TAG_BLOCK           18
-
-typedef struct {
-    uint8_t type;
-    union {
-        int64_t as_integer;
-        double as_float;
-
-        char *as_string;
-        bool as_boolean;
-        uint8_t as_block;
-    };
-} Value;
-
-void coerce(Value *a, Value *b) {
-    if (a->type == b->type) {
-        return;
+    fn collect_names_expr(expr: &Expression, names: &mut HashMap<String, usize>) {
+        match expr {
+            Expression::Identifier(_) | Expression::Literal(_) | Expression::Bang(_) | Expression::Dollar(_) => {
+                // Do nothing, no names possible
+            },
+            Expression::List(_) => todo!(),
+            Expression::Block(exprs) => {
+                for expr in exprs {
+                    collect_names_expr(expr, names);
+                }
+            },
+            Expression::Group(exprs) => {
+                for expr in exprs {
+                    collect_names_expr(expr, names);
+                }
+            },
+            Expression::At(expr) => {
+                match expr.as_ref() {
+                    Expression::Identifier(id) => {
+                        if !names.contains_key(id) {
+                            log::debug!("Adding name: {} @ {}", id, names.len());
+                            names.insert(id.clone(), names.len());
+                        }
+                    },
+                    Expression::List(id_exprs) => {
+                        for id_expr in id_exprs {
+                            match id_expr {
+                                Expression::Identifier(id) => {
+                                    if !names.contains_key(id) {
+                                        log::debug!("Adding name: {} @ {}", id, names.len());
+                                        names.insert(id.clone(), names.len());
+                                    }
+                                },
+                                _ => panic!("Unexpected @ expression when collecting names: {}", expr),
+                            }
+                        }
+                    },
+                    Expression::Literal(Value::Number(Number::Integer(_))) => {}, // ignore numeric @ expressions
+                    _ => panic!("Unexpected @ expression when collecting names: {}", expr),
+                }
+            },
+        }
     }
 
-    if (a->type == TAG_NUMBER_INTEGER && b->type == TAG_NUMBER_FLOAT) {
-        a->type = TAG_NUMBER_FLOAT;
-        a->as_float = (double)a->as_integer;
-    }
-
-    if (a->type == TAG_NUMBER_FLOAT && b->type == TAG_NUMBER_INTEGER) {
-        b->type = TAG_NUMBER_FLOAT;
-        b->as_float = (double)a->as_integer;
-    }
+    collect_names_expr(ast, &mut names);
+    names
 }
 
-int main(int argc, char *argv[]) {
-    // The stack holding all values
-    Value* stack = malloc(1024 * sizeof(Value));
-    Value* stack_ptr = stack;
+pub fn compile(ast: Expression) -> String {
+    let mut lines = vec![];
+    lines.push(include_str!("../compile_c_includes/header.c").to_string());
 
-    // Stack frames holding block scopes
-    Value** frames = malloc(1024 * sizeof(Value*));
-    Value** frame_ptr = frames;
+    let names = collect_names(&ast);
+    log::debug!("collected names: {:?}", names);
 
-"
-        .to_string(),
-    );
+    for (name, index) in names {
+        lines.push(format!("#define NAME_{: <15} {}", name, index));
+    }
 
-    fn compile_expr(expr: Expression) -> Vec<String> {
+    fn compile_expr(expr: Expression, block_count: &mut usize) -> Vec<String> {
+        log::debug!("compile_expr({expr})");
+
         let mut lines = vec![];
         lines.push(format!("    // {expr}")); // TODO: Flag for verbose mode
 
@@ -99,31 +106,39 @@ int main(int argc, char *argv[]) {
                     "%" => numeric_binop!(lines, "%"),
 
                     // Built ins
-                    "writeln" => {
-                        lines.push(
-                            "
-    {
-        Value v = *(stack_ptr--);
-        if (v.type == TAG_NUMBER_INTEGER) {
-            printf(\"%lld\\n\", v.as_integer);
-        } else if (v.type == TAG_NUMBER_FLOAT) {
-            printf(\"%f\\n\", v.as_float);
-        } else if (v.type == TAG_STRING) {
-            printf(\"%s\\n\", v.as_string);
-        } else if (v.type == TAG_BOOLEAN) {
-            printf(\"%s\\n\", v.as_boolean ? \"true\" : \"false\");
-        } else {
-            // TODO: Error
-        }
+                    "writeln" => lines.push("
+{
+    Value v = *(stack_ptr--);
+    if (v.type == TAG_NUMBER_INTEGER) {
+        printf(\"%lld\\n\", v.as_integer);
+    } else if (v.type == TAG_NUMBER_FLOAT) {
+        printf(\"%f\\n\", v.as_float);
+    } else if (v.type == TAG_STRING) {
+        printf(\"%s\\n\", v.as_string);
+    } else if (v.type == TAG_BOOLEAN) {
+        printf(\"%s\\n\", v.as_boolean ? \"true\" : \"false\");
+    } else {
+        // TODO: Error
     }
-"
-                            .to_string(),
-                        );
+}
+".to_string()),
+                    // Attempt to lookup in names table
+                    id => {
+                        lines.push(format!("
+    {{
+        Value* v = lookup(stack, stack_ptr, NAME_{id});
+        if (v->type == TAG_BLOCK) {{
+            // TODO
+        }} else {{
+            *(++stack_ptr) = *v;
+        }}
+    }}
+                        "));
                     }
 
                     // Unknown identifier
-                    // _ => panic!("Unknown identifier: {}", id),
-                    _ => {}
+                    _ => panic!("Unknown identifier: {}", id),
+                    
                 }
             }
             Expression::Literal(value) => {
@@ -147,39 +162,100 @@ int main(int argc, char *argv[]) {
 "
                 ));
             }
-            Expression::Block(_) => {
-                todo!();
+            Expression::Block(ref block) => {
+                *block_count += 1;
+
+                // TODO: Better panic
+                let (arity_in, arity_out) = calculate_arity(&expr).expect(format!("Unable to calculate arity for block: {:?}", expr).as_str());
+
+                lines.push(format!("goto skip_block_{block_count};"));
+                lines.push(format!("block_{block_count}:"));
+                lines.push(format!("    {{"));
+
+                lines.push(format!("    *(++frame_ptr) = (stack_ptr - {arity_in});"));
+                
+                // Compile the block itself
+                for expr in block {
+                    for line in compile_expr(expr.clone(), block_count) {
+                        lines.push(line);
+                    }
+                }
+
+                // Pop the block off the stack
+                lines.push(format!("    Value* return_ptr = (stack_ptr - {arity_out});"));
+                lines.push(format!("    stack_ptr =  *(frame_ptr--);"));
+                for _ in 0..arity_out {
+                    lines.push(format!("    *(stack_ptr++) = *(return_ptr++);"));
+                }
+
+                lines.push(format!("    }}"));
+                lines.push(format!("skip_block_{block_count}:"));
             }
             Expression::List(_) => todo!(),
             Expression::Group(exprs) => {
                 for expr in exprs {
-                    for line in compile_expr(expr) {
+                    for line in compile_expr(expr, block_count) {
                         lines.push(line);
                     }
                 }
             }
-            Expression::At(_) => {
-                todo!();
-            }
-            Expression::Bang(_) => todo!(),
-            Expression::Dollar(_) => todo!(),
+            Expression::At(expr) => {
+                match expr.as_ref() {
+                    Expression::Identifier(id) => {
+                        lines.push(format!("
+    {{
+        Value *v = stack_ptr;
+        if (v->name_count == STACKED_NAME_MAX) {{
+            printf(\"Too many names in @ expression\");
+            exit(1);
+        }}
+        v->names[v->name_count++] = NAME_{id};
+    }}
+"
+                        ));
+                    }
+                    Expression::List(id_exprs) => {
+                        let id_count = id_exprs.len();
+                        for (i, id_expr) in id_exprs.iter().enumerate() {
+                            match id_expr {
+                                Expression::Identifier(id) => {
+                                    lines.push(format!("
+    {{
+        Value *v = (stack_ptr - {id_count} + {i});
+        if (v->name_count == STACKED_NAME_MAX) {{
+            printf(\"Too many names in @ expression\");
+            exit(1);
+        }}
+        v->names[v->name_count++] = NAME_{id};
+    }}
+"
+                                    ));
+                                },
+                                _ => panic!("Unexpected @ expression when compiling: {}", expr),
+                            }
+                        }
+                    },
+                    Expression::Literal(Value::Number(Number::Integer(_))) => {}, // ignore numeric @ expressions
+                    _ => panic!("Unexpected @ expression when compiling: {}", expr),
+                }
+            },
+            Expression::Bang(_) => {
+                todo!()
+            },
+            Expression::Dollar(expr) => {
+                todo!()
+            },
         }
 
         lines
     }
 
-    for line in compile_expr(ast) {
+    lines.push(include_str!("../compile_c_includes/main_start.c").to_string());
+    let mut block_count = 0;
+    for line in compile_expr(ast, &mut block_count) {
         lines.push(line);
     }
-
-    lines.push(
-        "
-
-    return 0;
-}
-"
-        .to_string(),
-    );
+    lines.push(include_str!("../compile_c_includes/main_end.c").to_string());
 
     lines.join("\n")
 }
