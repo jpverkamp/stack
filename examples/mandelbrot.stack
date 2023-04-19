@@ -48,7 +48,7 @@ max_imag min_imag - height / @imag_step
       }
       zx zy cmag2 4.0 > if
     } 
-    i max_iter == if
+    i max_iter = if
 
   } @iter
 

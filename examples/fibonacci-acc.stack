@@ -2,20 +2,16 @@
     @n 
 
     {
-        @[n a b fibacc]
+        @[n a b]
         b
         {
             @0 !1
-            n 1 - 
-            a b + 
-            a
-            $fibacc
-            fibacc
+            (n 1 -) (a b +) a fibacc
         } 
         n 1 <= if
     } @fibacc
 
-    n 1 1 $fibacc fibacc
+    n 1 1 fibacc
 } @fib
 
 50 fib writeln
