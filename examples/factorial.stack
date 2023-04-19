@@ -1,8 +1,8 @@
 {
-  @[n fact]
+  @n
   1
-  { @0 n 1 - $fact fact n * }
+  { @0 n 1 - fact n * }
   n 1 < if
 } @fact
 
-5 $fact fact writeln
+5 fact writeln
