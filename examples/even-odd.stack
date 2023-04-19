@@ -1,0 +1,18 @@
+{
+    @n
+    true
+    { @0 n 1 - odd? } 
+    n 0 = if
+} @even?
+
+{
+    @n
+    false
+    { @0 n 1 - even? } 
+    n 0 = if
+} @odd?
+
+5 even? writeln
+5 odd?  writeln
+6 even? writeln
+6 odd?  writeln
