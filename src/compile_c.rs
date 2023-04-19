@@ -1,5 +1,8 @@
 use std::collections::HashMap;
 
+use regex::Regex;
+use sha2::{Digest, Sha256};
+
 use crate::arity::calculate_arity;
 use crate::numbers::Number;
 use crate::types::{Expression, Value};
@@ -50,6 +53,22 @@ macro_rules! numeric_compare {
     }};
 }
 
+/// Sanitize names
+fn sanitize_name(name: &str) -> String {
+    let re = Regex::new(r"[^a-zA-Z0-9_]").unwrap();
+    let cleaned_name = re.replace_all(name, "").to_string();
+
+    if cleaned_name == name {
+        cleaned_name
+    } else {
+        let mut hasher = Sha256::new();
+        hasher.update(name);
+        let result = hasher.finalize();
+        let hash_hex = format!("{:x}", result);
+        format!("{}_{}", cleaned_name, &hash_hex[0..4])
+    }
+}
+
 /// Collect the names used so we can assign each an integer value
 fn collect_names(ast: &Expression) -> HashMap<String, usize> {
     let mut names = HashMap::new();
@@ -76,7 +95,8 @@ fn collect_names(ast: &Expression) -> HashMap<String, usize> {
             Expression::At(expr) => {
                 match expr.as_ref() {
                     Expression::Identifier(id) => {
-                        if !names.contains_key(id) {
+                        let id = sanitize_name(id);
+                        if !names.contains_key(&id) {
                             log::debug!("Adding name: {} @ {}", id, names.len());
                             names.insert(id.clone(), names.len());
                         }
@@ -85,7 +105,8 @@ fn collect_names(ast: &Expression) -> HashMap<String, usize> {
                         for id_expr in id_exprs {
                             match id_expr {
                                 Expression::Identifier(id) => {
-                                    if !names.contains_key(id) {
+                                    let id = sanitize_name(id);
+                                    if !names.contains_key(&id) {
                                         log::debug!("Adding name: {} @ {}", id, names.len());
                                         names.insert(id.clone(), names.len());
                                     }
@@ -116,14 +137,21 @@ pub fn compile(ast: Expression) -> String {
     let names = collect_names(&ast);
     log::debug!("collected names: {:?}", names);
 
-    for (name, index) in names {
+    for (name, index) in names.iter() {
         lines.push(format!("#define NAME_{name} {index}"));
     }
+
+    lines.push("char* get_name(int index) {".to_string());
+    for (name, index) in names.iter() {
+        lines.push(format!("    if (index == {index}) {{ return \"{name}\"; }}"));
+    }
+    lines.push("}".to_string());
 
     lines.push(include_str!("../compile_c_includes/types.c").to_string());
     lines.push(include_str!("../compile_c_includes/globals.c").to_string());
     lines.push(include_str!("../compile_c_includes/coerce.c").to_string());
     lines.push(include_str!("../compile_c_includes/lookup.c").to_string());
+    lines.push(include_str!("../compile_c_includes/stack_dump.c").to_string()); // DEBUG
 
     /// Helper function to compile a specific block to be output later
     fn compile_block(
@@ -162,7 +190,7 @@ pub fn compile(ast: Expression) -> String {
         ));
         lines.push(format!("    stack_ptr =  *(frame_ptr--);"));
         for _ in 0..arity_out {
-            lines.push(format!("    *(stack_ptr++) = *(return_ptr++);"));
+            lines.push(format!("    *(++stack_ptr) = *(return_ptr++);"));
         }
 
         blocks[index] = lines;
@@ -189,7 +217,7 @@ pub fn compile(ast: Expression) -> String {
                     // Built in numeric comparisons
                     "<" => numeric_compare!(lines, "<"),
                     "<=" => numeric_compare!(lines, "<="),
-                    "==" => numeric_compare!(lines, "=="),
+                    "=" => numeric_compare!(lines, "=="),
                     "!=" => numeric_compare!(lines, "!="),
                     ">=" => numeric_compare!(lines, ">="),
                     ">" => numeric_compare!(lines, ">"),
@@ -207,6 +235,8 @@ pub fn compile(ast: Expression) -> String {
         printf(\"%s\\n\", v.as_string);
     } else if (v.type == TAG_BOOLEAN) {
         printf(\"%s\\n\", v.as_boolean ? \"true\" : \"false\");
+    } else if (v.type == TAG_BLOCK) {
+        printf(\"{block}\\n\");
     } else {
         // TODO: Error
     }
@@ -244,6 +274,7 @@ pub fn compile(ast: Expression) -> String {
 
                     // Attempt to lookup in names table
                     id => {
+                        let id = sanitize_name(id);
                         lines.push(format!(
                             "
     {{
@@ -305,6 +336,7 @@ pub fn compile(ast: Expression) -> String {
             Expression::At(expr) => {
                 match expr.as_ref() {
                     Expression::Identifier(id) => {
+                        let id = sanitize_name(id);
                         lines.push(format!(
                             "
     {{
