@@ -1,6 +1,6 @@
 void stack_dump()
 {
-    for (Value *ptr = stack; ptr < stack_ptr; ptr++)
+    for (Value *ptr = stack; ptr <= stack_ptr; ptr++)
     {
         if (ptr->type == TAG_NUMBER_INTEGER)
         {
