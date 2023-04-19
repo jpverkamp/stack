@@ -222,54 +222,14 @@ pub fn compile(ast: Expression) -> String {
                     ">" => numeric_compare!(lines, ">"),
 
                     // Built ins
-                    "writeln" => lines.push(
-                        "
-{
-    Value v = *(stack_ptr--);
-    if (v.type == TAG_NUMBER_INTEGER) {
-        printf(\"%lld\\n\", v.as_integer);
-    } else if (v.type == TAG_NUMBER_FLOAT) {
-        printf(\"%f\\n\", v.as_float);
-    } else if (v.type == TAG_STRING) {
-        printf(\"%s\\n\", v.as_string);
-    } else if (v.type == TAG_BOOLEAN) {
-        printf(\"%s\\n\", v.as_boolean ? \"true\" : \"false\");
-    } else if (v.type == TAG_BLOCK) {
-        printf(\"{block}\\n\");
-    } else {
-        // TODO: Error
-    }
-}
-"
-                        .to_string(),
-                    ),
-
-                    "if" => lines.push(
-                        "
-    {
-        Value *cond = stack_ptr--;
-        Value *if_false = stack_ptr--;
-        Value *if_true = stack_ptr--;
-
-        if (cond->type != TAG_BOOLEAN) {
-            printf(\"Error: if condition must be a boolean\\n\");
-            exit(1);
-        }
-
-        Value *v = (cond->as_boolean ? if_true : if_false);
-
-        if (v->type == TAG_BLOCK) {
-            void *f = v->as_block;
-            ((void (*)())f)();
-        } else {
-            *(++stack_ptr) = *v;
-        }
-    }
-"
-                        .to_string(),
-                    ),
-
-
+                    "write" => lines.push(include_str!("../compile_c_includes/write.c").to_string()),
+                    "writeln" => {
+                        lines.push(include_str!("../compile_c_includes/write.c").to_string());
+                        lines.push("printf(\"\\n\");".to_string());
+                    },
+                    "newline" => lines.push("printf(\"\\n\");".to_string()),
+                    "loop" => lines.push(include_str!("../compile_c_includes/loop.c").to_string()),
+                    "if" => lines.push(include_str!("../compile_c_includes/if.c").to_string()),
 
                     // Attempt to lookup in names table
                     id => {
@@ -377,8 +337,11 @@ pub fn compile(ast: Expression) -> String {
                     _ => panic!("Unexpected @ expression when compiling: {}", expr),
                 }
             }
-            Expression::Bang(_) => {
-                todo!()
+            Expression::Bang(v) => {
+                match v.as_ref() {
+                    Expression::Literal(Value::Number(Number::Integer(_))) => {}, // Used only for arity out expressions
+                    _ => todo!(),
+                }
             }
             Expression::Dollar(expr) => match expr.as_ref() {
                 Expression::Identifier(id) => {
