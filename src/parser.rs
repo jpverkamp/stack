@@ -45,7 +45,9 @@ pub fn parse(tokens: Vec<Token>) -> Expression {
                 )
             } else if tokens[0].token.starts_with("\"") {
                 (
-                    Expression::Literal(Value::String(tokens[0].token.trim_matches('"').to_string())),
+                    Expression::Literal(Value::String(
+                        tokens[0].token.trim_matches('"').to_string(),
+                    )),
                     &tokens[1..],
                 )
             } else if tokens[0].token == "true" || tokens[0].token == "false" {
@@ -123,9 +125,9 @@ mod test {
         let output = parse(input);
         assert_eq!(
             output,
-            Expression::Group(vec![Expression::Literal(Value::String(
-                String::from("hello world")
-            ))])
+            Expression::Group(vec![Expression::Literal(Value::String(String::from(
+                "hello world"
+            )))])
         );
     }
 
@@ -211,7 +213,8 @@ mod test {
 
     #[test]
     fn test_factorial() {
-        let input = tokenize("
+        let input = tokenize(
+            "
 {
   @[n fact]
   1
@@ -219,7 +222,9 @@ mod test {
   n 1 < if
 } @fact
 
-5 $fact fact writeln".as_bytes());
+5 $fact fact writeln"
+                .as_bytes(),
+        );
         let output = parse(input);
         assert_eq!(
             output,
@@ -231,15 +236,13 @@ mod test {
                     ]))),
                     Expression::Literal(Value::Number(Number::Integer(1))),
                     Expression::Block(vec![
-                        Expression::At(Box::new(
-                            Expression::Literal(Value::Number(Number::Integer(0))),
-                        )),
+                        Expression::At(Box::new(Expression::Literal(Value::Number(
+                            Number::Integer(0)
+                        )),)),
                         Expression::Identifier(String::from("n")),
                         Expression::Literal(Value::Number(Number::Integer(1))),
                         Expression::Identifier(String::from("-")),
-                        Expression::Dollar(Box::new(Expression::Identifier(String::from(
-                            "fact"
-                        )))),
+                        Expression::Dollar(Box::new(Expression::Identifier(String::from("fact")))),
                         Expression::Identifier(String::from("fact")),
                         Expression::Identifier(String::from("n")),
                         Expression::Identifier(String::from("*")),
@@ -256,6 +259,5 @@ mod test {
                 Expression::Identifier(String::from("writeln")),
             ])
         );
-
     }
 }
