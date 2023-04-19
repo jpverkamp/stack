@@ -145,6 +145,7 @@ pub fn compile(ast: Expression) -> String {
     for (name, index) in names.iter() {
         lines.push(format!("    if (index == {index}) {{ return \"{name}\"; }}"));
     }
+    lines.push("    return \"<unknown>\";".to_string());
     lines.push("}".to_string());
 
     lines.push(include_str!("../compile_c_includes/types.c").to_string());
@@ -185,12 +186,10 @@ pub fn compile(ast: Expression) -> String {
 
         // Pop the block off the stack
         lines.push(format!("    // Pop the block off the stack, preserving arity_out values"));
-        lines.push(format!(
-            "    Value* return_ptr = (stack_ptr - {arity_out});"
-        ));
+        lines.push(format!("    Value* return_ptr = (stack_ptr - {arity_out});"));
         lines.push(format!("    stack_ptr =  *(frame_ptr--);"));
         for _ in 0..arity_out {
-            lines.push(format!("    *(++stack_ptr) = *(return_ptr++);"));
+            lines.push(format!("    *(++stack_ptr) = *(++return_ptr);"));
         }
 
         blocks[index] = lines;
@@ -299,7 +298,7 @@ pub fn compile(ast: Expression) -> String {
                     }
                     Value::Number(Number::Float(v)) => ("TAG_NUMBER_FLOAT", "float", v.to_string()),
                     Value::String(v) => ("TAG_STRING", "string", format!("{v:?}")),
-                    Value::Boolean(_v) => todo!(),
+                    Value::Boolean(v) => ("TAG_BOOLEAN", "boolean", format!("{v:?}")),
                     Value::Block { .. } => todo!(),
                 };
 
@@ -355,10 +354,12 @@ pub fn compile(ast: Expression) -> String {
                         for (i, id_expr) in id_exprs.iter().enumerate() {
                             match id_expr {
                                 Expression::Identifier(id) => {
+                                    let id = sanitize_name(id);
+                                    
                                     lines.push(format!(
                                         "
-    {{
-        Value *v = (stack_ptr - {id_count} + {i});
+    {{ 
+        Value *v = (stack_ptr - {id_count} + {i} + 1);
         if (v->name_count == STACKED_NAME_MAX) {{
             printf(\"Too many names in @ expression\");
             exit(1);
@@ -416,6 +417,10 @@ pub fn compile(ast: Expression) -> String {
     lines.push("// Actual block definitions".to_string());
     for (i, block) in blocks.iter().enumerate() {
         lines.push(format!("void block_{i}() {{").to_string());
+        
+        // lines.push(format!("printf(\"[DEBUG] block_{i} --\");").to_string()); // DEBUG
+        // lines.push(format!("stack_dump();")); // DEBUG
+
         lines.push(block.join("\n"));
         lines.push("}".to_string());
     }
