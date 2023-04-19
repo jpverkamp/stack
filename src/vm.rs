@@ -95,7 +95,7 @@ pub fn evaluate(ast: Expression) {
                     // Built in comparisons
                     "<" => comparison_binop!(stack, |a, b| { a < b }),
                     "<=" => comparison_binop!(stack, |a, b| { a <= b }),
-                    "==" => comparison_binop!(stack, |a, b| { a == b }),
+                    "=" => comparison_binop!(stack, |a, b| { a == b }),
                     ">=" => comparison_binop!(stack, |a, b| { a >= b }),
                     ">" => comparison_binop!(stack, |a, b| { a > b }),
                     // Convert a value to an int if possible
