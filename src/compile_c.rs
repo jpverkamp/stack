@@ -222,14 +222,15 @@ pub fn compile(ast: Expression) -> String {
                     ">" => numeric_compare!(lines, ">"),
 
                     // Built ins
-                    "write" => lines.push(include_str!("../compile_c_includes/write.c").to_string()),
+                    "write" => lines.push(include_str!("../compile_c_includes/builtins/write.c").to_string()),
                     "writeln" => {
-                        lines.push(include_str!("../compile_c_includes/write.c").to_string());
+                        lines.push(include_str!("../compile_c_includes/builtins/write.c").to_string());
                         lines.push("printf(\"\\n\");".to_string());
                     },
                     "newline" => lines.push("printf(\"\\n\");".to_string()),
-                    "loop" => lines.push(include_str!("../compile_c_includes/loop.c").to_string()),
-                    "if" => lines.push(include_str!("../compile_c_includes/if.c").to_string()),
+                    "loop" => lines.push(include_str!("../compile_c_includes/builtins/loop.c").to_string()),
+                    "if" => lines.push(include_str!("../compile_c_includes/builtins/if.c").to_string()),
+                    "int" => lines.push(include_str!("../compile_c_includes/builtins/int.c").to_string()),
 
                     // Attempt to lookup in names table
                     id => {
