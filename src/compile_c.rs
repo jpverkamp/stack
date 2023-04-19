@@ -267,7 +267,7 @@ pub fn compile(ast: Expression) -> String {
                         ("TAG_NUMBER_INTEGER", "integer", v.to_string())
                     }
                     Value::Number(Number::Float(v)) => ("TAG_NUMBER_FLOAT", "float", v.to_string()),
-                    Value::String(_v) => todo!(),
+                    Value::String(v) => ("TAG_STRING", "string", format!("{v:?}")),
                     Value::Boolean(_v) => todo!(),
                     Value::Block { .. } => todo!(),
                 };
