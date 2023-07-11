@@ -4,6 +4,7 @@ use regex::Regex;
 use sha2::{Digest, Sha256};
 
 use crate::arity::calculate_arity;
+use crate::debug;
 use crate::numbers::Number;
 use crate::types::{Expression, Value};
 
@@ -152,7 +153,12 @@ pub fn compile(ast: Expression) -> String {
     lines.push(include_str!("../compile_c_includes/globals.c").to_string());
     lines.push(include_str!("../compile_c_includes/coerce.c").to_string());
     lines.push(include_str!("../compile_c_includes/lookup.c").to_string());
-    lines.push(include_str!("../compile_c_includes/stack_dump.c").to_string()); // DEBUG
+
+    unsafe {
+        if debug::ENABLED {
+            lines.push(include_str!("../compile_c_includes/stack_dump.c").to_string()); // DEBUG
+        }
+    }
 
     /// Helper function to compile a specific block to be output later
     fn compile_block(
@@ -301,11 +307,22 @@ pub fn compile(ast: Expression) -> String {
                             "
     {{
         Value *v = stack_ptr;
-        if (v->name_count == STACKED_NAME_MAX) {{
-            printf(\"Too many names in @ expression\");
-            exit(1);
+
+        bool already_set = false;
+        for (int i = 0; i < v->name_count; i++) {{
+            if (v->names[i] == NAME_{id}) {{
+                already_set = true;
+                break;
+            }}
         }}
-        v->names[v->name_count++] = NAME_{id};
+
+        if (!already_set) {{
+            if (v->name_count == STACKED_NAME_MAX) {{
+                printf(\"Too many names in @ expression\");
+                exit(1);
+            }}
+            v->names[v->name_count++] = NAME_{id};
+        }}
     }}
 "
                         ));
@@ -321,11 +338,22 @@ pub fn compile(ast: Expression) -> String {
                                         "
     {{ 
         Value *v = (stack_ptr - {id_count} + {i} + 1);
-        if (v->name_count == STACKED_NAME_MAX) {{
-            printf(\"Too many names in @ expression\");
-            exit(1);
+        
+        bool already_set = false;
+        for (int i = 0; i < v->name_count; i++) {{
+            if (v->names[i] == NAME_{id}) {{
+                already_set = true;
+                break;
+            }}
         }}
-        v->names[v->name_count++] = NAME_{id};
+
+        if (!already_set) {{
+            if (v->name_count == STACKED_NAME_MAX) {{
+                printf(\"Too many names in @ expression\");
+                exit(1);
+            }}
+            v->names[v->name_count++] = NAME_{id};
+        }}
     }}
 "
                                     ));
@@ -382,8 +410,12 @@ pub fn compile(ast: Expression) -> String {
     for (i, block) in blocks.iter().enumerate() {
         lines.push(format!("void block_{i}() {{").to_string());
         
-        // lines.push(format!("printf(\"[DEBUG] block_{i} --\");").to_string()); // DEBUG
-        // lines.push(format!("stack_dump();")); // DEBUG
+        unsafe {
+            if debug::ENABLED {
+                lines.push(format!("printf(\"[DEBUG] block_{i} --\");").to_string()); // DEBUG
+                lines.push(format!("stack_dump();")); // DEBUG
+            }
+        }
 
         lines.push(block.join("\n"));
         lines.push("}".to_string());
