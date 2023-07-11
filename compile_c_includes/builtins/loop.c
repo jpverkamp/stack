@@ -4,7 +4,7 @@
 
     if (block.type != TAG_BLOCK)
     {
-        printf("Error: loop block must be a block\\n");
+        printf("Error: loop block must be a block\n");
         exit(1);
     }
 
@@ -21,7 +21,7 @@
     }
     else
     {
-        printf("Error: loop iterator must be an integer (others todo)\\n");
+        printf("Error: loop iterator must be an integer (others todo)\n");
         exit(1);
     }
 }
