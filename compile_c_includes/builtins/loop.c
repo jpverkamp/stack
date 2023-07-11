@@ -16,7 +16,7 @@
             *(++stack_ptr) = v;
 
             void *f = block.as_block;
-            ((void (*)())f)();
+            ((void (*)(Name *))f)(names);
         }
     }
     else

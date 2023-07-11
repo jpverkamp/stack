@@ -14,7 +14,7 @@
     if (v.type == TAG_BLOCK)
     {
         void *f = v.as_block;
-        ((void (*)())f)();
+        ((void (*)(Name *))f)(names);
     }
     else
     {

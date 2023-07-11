@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
     frames = malloc(10240 * sizeof(Value **));
     frame_ptr = frames;
 
-    block_0();
+    block_0(NULL);
 
     return 0;
 }

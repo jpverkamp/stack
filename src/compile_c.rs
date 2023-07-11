@@ -156,7 +156,7 @@ pub fn compile(ast: Expression) -> String {
     lines.push(include_str!("../compile_c_includes/types.c").to_string());
     lines.push(include_str!("../compile_c_includes/globals.c").to_string());
     lines.push(include_str!("../compile_c_includes/coerce.c").to_string());
-    lines.push(include_str!("../compile_c_includes/lookup.c").to_string());
+    lines.push(include_str!("../compile_c_includes/names.c").to_string());
 
     unsafe {
         if debug::ENABLED {
@@ -249,10 +249,10 @@ pub fn compile(ast: Expression) -> String {
                         lines.push(format!(
                             "
     {{
-        Value* v = lookup(stack, stack_ptr, NAME_{id});
+        Value* v = lookup(names, NAME_{id});
         if (v->type == TAG_BLOCK) {{
             void *f = v->as_block;
-            ((void (*)())f)();
+            ((void (*)(Name*))f)(names);
         }} else {{
             *(++stack_ptr) = *v;
         }}
@@ -312,22 +312,7 @@ pub fn compile(ast: Expression) -> String {
                             "
     {{
         Value *v = stack_ptr;
-
-        bool already_set = false;
-        for (int i = 0; i < v->name_count; i++) {{
-            if (v->names[i] == NAME_{id}) {{
-                already_set = true;
-                break;
-            }}
-        }}
-
-        if (!already_set) {{
-            if (v->name_count == STACKED_NAME_MAX) {{
-                printf(\"Too many names in @ expression\");
-                exit(1);
-            }}
-            v->names[v->name_count++] = NAME_{id};
-        }}
+        names = bind(names, NAME_{id}, v);
     }}
 "
                         ));
@@ -343,22 +328,7 @@ pub fn compile(ast: Expression) -> String {
                                         "
     {{ 
         Value *v = (stack_ptr - {id_count} + {i} + 1);
-        
-        bool already_set = false;
-        for (int i = 0; i < v->name_count; i++) {{
-            if (v->names[i] == NAME_{id}) {{
-                already_set = true;
-                break;
-            }}
-        }}
-
-        if (!already_set) {{
-            if (v->name_count == STACKED_NAME_MAX) {{
-                printf(\"Too many names in @ expression\");
-                exit(1);
-            }}
-            v->names[v->name_count++] = NAME_{id};
-        }}
+        names = bind(names, NAME_{id}, v);
     }}
 "
                                     ));
@@ -382,7 +352,7 @@ pub fn compile(ast: Expression) -> String {
                     lines.push(format!(
                         "
     {{
-        Value* v = lookup(stack, stack_ptr, NAME_{id});
+        Value* v = lookup(names, NAME_{id});
         *(++stack_ptr) = *v;
     }}
         "
@@ -407,18 +377,20 @@ pub fn compile(ast: Expression) -> String {
     // Forward declare all blocks
     lines.push("\n// Forward declare all blocks".to_string());
     for (i, _) in blocks.iter().enumerate() {
-        lines.push(format!("void block_{i}();", i = i).to_string());
+        lines.push(format!("void block_{i}(Name *block_names);", i = i).to_string());
     }
 
     // Generate block functions
     lines.push("\n// Actual block definitions".to_string());
     for (i, block) in blocks.iter().enumerate() {
-        lines.push(format!("void block_{i}() {{").to_string());
+        lines.push(format!("void block_{i}(Name *block_names) {{").to_string());
+        lines.push(format!("    if (block_names != NULL) block_names->boundary = true;").to_string());
+        lines.push(format!("    Name* names = block_names;").to_string());
         
         unsafe {
             if debug::ENABLED {
                 lines.push(format!("    printf(\"[DEBUG] block_{i} called --\");").to_string()); // DEBUG
-                lines.push(format!("    stack_dump();\n")); // DEBUG
+                lines.push(format!("    stack_dump(names);\n")); // DEBUG
             }
         }
 
@@ -427,10 +399,11 @@ pub fn compile(ast: Expression) -> String {
         unsafe {
             if debug::ENABLED {
                 lines.push(format!("    printf(\"[DEBUG] block_{i} return --\");").to_string()); // DEBUG
-                lines.push(format!("    stack_dump();\n")); // DEBUG
+                lines.push(format!("    stack_dump(names);\n")); // DEBUG
             }
         }
 
+        lines.push("    // TODO: Free names between block_names and names; don't free block_names itself".to_string());
         lines.push("}".to_string());
     }
 

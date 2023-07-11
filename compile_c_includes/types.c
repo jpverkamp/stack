@@ -12,8 +12,4 @@ typedef struct
         bool as_boolean;
         void *as_block;
     };
-
-    uint8_t name_count;
-    uint8_t names[4];
-    // TODO: more than 4 names
 } Value;
