@@ -142,12 +142,16 @@ pub fn compile(ast: Expression) -> String {
         lines.push(format!("#define NAME_{name} {index}"));
     }
 
-    lines.push("char* get_name(int index) {".to_string());
-    for (name, index) in names.iter() {
-        lines.push(format!("    if (index == {index}) {{ return \"{name}\"; }}"));
+    unsafe {
+        if debug::ENABLED {
+            lines.push("char* get_name(int index) {".to_string());
+            for (name, index) in names.iter() {
+                lines.push(format!("    if (index == {index}) {{ return \"{name}\"; }}"));
+            }
+            lines.push("    return \"<unknown>\";".to_string());
+            lines.push("}".to_string());
+        }
     }
-    lines.push("    return \"<unknown>\";".to_string());
-    lines.push("}".to_string());
 
     lines.push(include_str!("../compile_c_includes/types.c").to_string());
     lines.push(include_str!("../compile_c_includes/globals.c").to_string());
@@ -181,7 +185,8 @@ pub fn compile(ast: Expression) -> String {
                 .collect::<Vec<String>>()
                 .join(" ")
         ));
-        lines.push(format!("    *(++frame_ptr) = (stack_ptr - {arity_in});"));
+        lines.push(format!("\n    // Store the current stack pointer with arity_in={arity_in}"));
+        lines.push(format!("    *(++frame_ptr) = (stack_ptr - {arity_in});\n"));
 
         // Compile the block itself
         for expr in body {
@@ -191,7 +196,7 @@ pub fn compile(ast: Expression) -> String {
         }
 
         // Pop the block off the stack
-        lines.push(format!("    // Pop the block off the stack, preserving arity_out values"));
+        lines.push(format!("    // Pop the block off the stack, preserving arity_out={arity_out} values"));
         lines.push(format!("    Value* return_ptr = (stack_ptr - {arity_out});"));
         lines.push(format!("    stack_ptr =  *(frame_ptr--);"));
         for _ in 0..arity_out {
@@ -400,24 +405,32 @@ pub fn compile(ast: Expression) -> String {
     }
 
     // Forward declare all blocks
-    lines.push("// Forward declare all blocks".to_string());
+    lines.push("\n// Forward declare all blocks".to_string());
     for (i, _) in blocks.iter().enumerate() {
         lines.push(format!("void block_{i}();", i = i).to_string());
     }
 
     // Generate block functions
-    lines.push("// Actual block definitions".to_string());
+    lines.push("\n// Actual block definitions".to_string());
     for (i, block) in blocks.iter().enumerate() {
         lines.push(format!("void block_{i}() {{").to_string());
         
         unsafe {
             if debug::ENABLED {
-                lines.push(format!("printf(\"[DEBUG] block_{i} --\");").to_string()); // DEBUG
-                lines.push(format!("stack_dump();")); // DEBUG
+                lines.push(format!("    printf(\"[DEBUG] block_{i} called --\");").to_string()); // DEBUG
+                lines.push(format!("    stack_dump();\n")); // DEBUG
             }
         }
 
         lines.push(block.join("\n"));
+
+        unsafe {
+            if debug::ENABLED {
+                lines.push(format!("    printf(\"[DEBUG] block_{i} return --\");").to_string()); // DEBUG
+                lines.push(format!("    stack_dump();\n")); // DEBUG
+            }
+        }
+
         lines.push("}".to_string());
     }
 
