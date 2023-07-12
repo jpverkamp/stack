@@ -16,6 +16,6 @@ void coerce(Value *a, Value *b)
     if (a->type == TAG_NUMBER_FLOAT && b->type == TAG_NUMBER_INTEGER)
     {
         b->type = TAG_NUMBER_FLOAT;
-        b->as_float = (double)a->as_integer;
+        b->as_float = (double)b->as_integer;
     }
 }
