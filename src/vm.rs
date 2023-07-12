@@ -99,13 +99,24 @@ pub fn evaluate(ast: Expression) {
                     ">=" => comparison_binop!(stack, |a, b| { a >= b }),
                     ">" => comparison_binop!(stack, |a, b| { a > b }),
                     // Convert a value to an int if possible
-                    "int" => {
+                    "to_int" => {
                         let value = stack.pop().unwrap();
                         match value {
                             Value::String(s) => {
                                 stack.push(Value::Number(Number::Integer(s.parse().unwrap())))
                             }
                             Value::Number(n) => stack.push(Value::Number(n.to_integer())),
+                            _ => panic!("int cannot, got {}", value),
+                        }
+                    }
+                    // Convert a value to a float if possible
+                    "to_float" => {
+                        let value = stack.pop().unwrap();
+                        match value {
+                            Value::String(s) => {
+                                stack.push(Value::Number(Number::Float(s.parse().unwrap())))
+                            }
+                            Value::Number(n) => stack.push(Value::Number(n.to_float())),
                             _ => panic!("int cannot, got {}", value),
                         }
                     }

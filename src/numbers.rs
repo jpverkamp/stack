@@ -28,6 +28,14 @@ impl Number {
             Number::Float(v) => Number::Integer(v as i64),
         }
     }
+
+    /// Forces a number to a float
+    pub fn to_float(self) -> Number {
+        match self {
+            Number::Integer(v) => Number::Float(v as f64),
+            Number::Float(_) => self,
+        }
+    }
 }
 
 macro_rules! do_op {
