@@ -273,7 +273,7 @@ pub fn compile(ast: Expression) -> String {
                     Value::Number(Number::Float(v)) => ("TAG_NUMBER_FLOAT", "float", v.to_string()),
                     Value::String(v) => ("TAG_STRING", "string", format!("{v:?}")),
                     Value::Boolean(v) => ("TAG_BOOLEAN", "boolean", format!("{v:?}")),
-                    Value::Block { .. } => todo!(),
+                    Value::Block { .. } => panic!("Blocks should be compiled separately"),
                 };
 
                 lines.push(format!(
@@ -313,8 +313,8 @@ pub fn compile(ast: Expression) -> String {
                         lines.push(format!(
                             "
     {{
-        Value *v = stack_ptr;
-        names = bind(names, NAME_{id}, v);
+        Value *p = stack_ptr;
+        names = bind(names, NAME_{id}, p);
     }}
 "
                         ));
@@ -329,8 +329,8 @@ pub fn compile(ast: Expression) -> String {
                                     lines.push(format!(
                                         "
     {{ 
-        Value *v = (stack_ptr - {id_count} + {i} + 1);
-        names = bind(names, NAME_{id}, v);
+        Value *p = (stack_ptr - {id_count} + {i} + 1);
+        names = bind(names, NAME_{id}, p);
     }}
 "
                                     ));
@@ -367,8 +367,8 @@ pub fn compile(ast: Expression) -> String {
         lines
     }
 
+    // Compile the top level expression
     let mut blocks = vec![];
-
     match ast {
         Expression::Group(body) => {
             compile_block((0, 0), &body, &mut blocks);
@@ -416,7 +416,9 @@ pub fn compile(ast: Expression) -> String {
         lines.push("}".to_string());
     }
 
+    // Add the main function that setups up the initial stack and calls the top level block (block_0)
     lines.push(include_str!("../compile_c_includes/main.c").to_string());
 
+    // Put it all together
     lines.join("\n")
 }
