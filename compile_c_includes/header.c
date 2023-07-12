@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define TAG_NUMBER 0
 #define TAG_NUMBER_INTEGER 1

@@ -233,6 +233,7 @@ pub fn compile(ast: Expression) -> String {
                     ">" => numeric_compare!(lines, ">"),
 
                     // Built ins
+                    "read" => lines.push(include_str!("../compile_c_includes/builtins/read.c").to_string()),
                     "write" => lines.push(include_str!("../compile_c_includes/builtins/write.c").to_string()),
                     "writeln" => {
                         lines.push(include_str!("../compile_c_includes/builtins/write.c").to_string());

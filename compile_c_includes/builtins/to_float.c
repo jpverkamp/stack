@@ -11,8 +11,7 @@
     }
     else if (v->type == TAG_STRING)
     {
-        printf("todo: cast string to float");
-        exit(1);
+        v->as_float = strtod(v->as_string);
     }
     else if (v->type == TAG_BOOLEAN)
     {

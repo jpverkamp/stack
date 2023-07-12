@@ -11,8 +11,7 @@
     }
     else if (v->type == TAG_STRING)
     {
-        printf("todo: cast string to int");
-        exit(1);
+        v->as_integer = atoi(v->as_string);
     }
     else if (v->type == TAG_BOOLEAN)
     {
