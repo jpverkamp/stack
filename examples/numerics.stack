@@ -1,0 +1,11 @@
+3 2.7 + writeln
+3 2.7 * writeln
+
+3 to_float 2.7 + writeln
+3 to_float 2.7 * writeln
+
+3 2.7 to_int + writeln
+3 2.7 to_int * writeln
+
+3 to_float 2.7 + to_int writeln
+3 to_float 2.7 * to_int writeln
