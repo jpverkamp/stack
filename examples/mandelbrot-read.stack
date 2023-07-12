@@ -74,13 +74,21 @@ height writeln
         # Calculate the number of iterations for the current complex number
         real imag max_iterations mandelbrot @iterations
 
-        # Scale the number of iterations to a color value (assuming grayscale)
-        1.0 iterations * max_iterations / 255 * to_int @color
+        { @0 !0 "0 0 0 " write }
+        {
+          @0 !0
 
-        # Write the color value to the PPM file (red, green, blue)
-        color write " " write
-        color write " " write
-        color write " " write
+          # Scale the number of iterations to a color value (assuming grayscale)
+          1.0 iterations * max_iterations / 255 * to_int @color
+
+          # Write the color value to the PPM file (red, green, blue)
+          color write " " write
+          255 color - write " " write
+          0 write " " write
+        }
+        iterations 0 = if
+
+
     } width loop
     newline
 } height loop
