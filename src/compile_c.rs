@@ -241,7 +241,8 @@ pub fn compile(ast: Expression) -> String {
                     "newline" => lines.push("printf(\"\\n\");".to_string()),
                     "loop" => lines.push(include_str!("../compile_c_includes/builtins/loop.c").to_string()),
                     "if" => lines.push(include_str!("../compile_c_includes/builtins/if.c").to_string()),
-                    "int" => lines.push(include_str!("../compile_c_includes/builtins/int.c").to_string()),
+                    "to_float" => lines.push(include_str!("../compile_c_includes/builtins/to_float.c").to_string()),
+                    "to_int" => lines.push(include_str!("../compile_c_includes/builtins/to_int.c").to_string()),
 
                     // Attempt to lookup in names table
                     id => {
@@ -403,7 +404,14 @@ pub fn compile(ast: Expression) -> String {
             }
         }
 
-        lines.push("    // TODO: Free names between block_names and names; don't free block_names itself".to_string());
+        lines.push("    // Free names bound in this block".to_string());
+        lines.push("    
+    while (names != NULL && block_names != names) {
+        Name *next = names->prev;
+        free(names);
+        names = next;
+    }
+        ".to_string());
         lines.push("}".to_string());
     }
 
