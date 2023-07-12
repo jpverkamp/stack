@@ -1,7 +1,7 @@
 # Set image dimensions and maximum number of iterations
-read int @width
-read int @height
-read int @max_iterations
+read to_int @width
+read to_int @height
+read to_int @max_iterations
 
 # Set the range of complex numbers to visualize
 -2.0 @min_real
@@ -48,7 +48,7 @@ max_imag min_imag - height / @imag_step
       }
       zx zy cmag2 4.0 > if
     } 
-    i max_iter == if
+    i max_iter = if
 
   } @iter
 
@@ -75,7 +75,7 @@ height writeln
         real imag max_iterations mandelbrot @iterations
 
         # Scale the number of iterations to a color value (assuming grayscale)
-        1.0 iterations * max_iterations / 255 * int @color
+        1.0 iterations * max_iterations / 255 * to_int @color
 
         # Write the color value to the PPM file (red, green, blue)
         color write " " write

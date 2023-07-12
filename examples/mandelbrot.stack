@@ -75,7 +75,7 @@ height writeln
         real imag max_iterations mandelbrot @iterations
 
         # Scale the number of iterations to a color value (assuming grayscale)
-        1.0 iterations * max_iterations / 255 * int @color
+        1.0 iterations * max_iterations / 255 * to_int @color
 
         # Write the color value to the PPM file (red, green, blue)
         color write " " write
