@@ -13,5 +13,3 @@
 #define TAG_STRING 16
 #define TAG_BOOLEAN 17
 #define TAG_BLOCK 18
-
-#define STACKED_NAME_MAX 4
