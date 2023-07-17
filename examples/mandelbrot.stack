@@ -1,6 +1,6 @@
 # Set image dimensions and maximum number of iterations
-128 @width
-128 @height
+1920 @width
+1080 @height
 16 @max_iterations
 
 # Set the range of complex numbers to visualize

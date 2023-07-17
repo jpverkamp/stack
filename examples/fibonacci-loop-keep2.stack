@@ -1,0 +1,12 @@
+{
+    @n
+    1 1
+    { 
+        @[a b n] !2 # take a, b and n (ignored), return 2
+        b           # new a
+        a b +       # new b
+    }
+    n 2 - loop
+} @fib
+
+40 fib writeln

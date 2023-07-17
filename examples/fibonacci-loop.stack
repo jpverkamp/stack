@@ -1,0 +1,12 @@
+{
+    @n
+    1 1
+    { 
+        @1 !1    # pop n (ignore it), return a+b
+        @[a b n] # name the top three values of the stack a, b, n
+        a b +    # push a + b
+    }
+    n 2 - loop
+} @fib
+
+40 fib writeln

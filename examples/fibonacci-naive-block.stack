@@ -11,4 +11,4 @@
     n 2 <= if
 } @fib
 
-30 $fib fib writeln
+40 $fib fib writeln

@@ -14,4 +14,4 @@
     n 1 1 fibacc
 } @fib
 
-50 fib writeln
+40 fib writeln
