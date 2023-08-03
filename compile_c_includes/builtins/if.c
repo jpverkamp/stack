@@ -5,7 +5,7 @@
 
     if (cond.type != TAG_BOOLEAN)
     {
-        printf("Error: if condition must be a boolean\n");
+        fprintf(stderr, "Error: if condition must be a boolean\n");
         exit(1);
     }
 

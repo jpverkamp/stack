@@ -13,7 +13,7 @@ Name *bind(Name *names, uint8_t name, Value *value)
     Name *new_name = malloc(sizeof(Name));
     if (new_name == NULL)
     {
-        printf("Out of memory");
+        fprintf(stderr, "Out of memory");
         exit(1);
     }
 
@@ -36,6 +36,6 @@ Value *lookup(Name *names, uint8_t name)
         names = names->prev;
     }
 
-    printf("Name not found: %d", name);
+    fprintf(stderr, "Name not found: %d", name);
     exit(1);
 }

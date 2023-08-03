@@ -4,7 +4,7 @@
     char *line = malloc(sizeof(char) * 1024);
     if (fgets(line, 1024, stdin) == NULL)
     {
-        printf("Error reading from stdin\n");
+        fprintf(stderr, "Error reading from stdin\n");
         exit(1);
     }
 

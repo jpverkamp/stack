@@ -2,84 +2,84 @@ void stack_dump(Name *names)
 {
     if (stack_ptr == stack)
     {
-        printf(" STACK: <empty>");
+        ffprintf(stderr, stderr, " STACK: <empty>");
     }
     else
     {
-        printf(" STACK: ");
+        ffprintf(stderr, stderr, " STACK: ");
         for (Value *ptr = stack_ptr; ptr != stack; ptr--)
         {
             if (ptr->type == TAG_NUMBER_INTEGER)
             {
-                printf("%lld", ptr->as_integer);
+                ffprintf(stderr, stderr, "%lld", ptr->as_integer);
             }
             else if (ptr->type == TAG_NUMBER_FLOAT)
             {
-                printf("%f", ptr->as_float);
+                ffprintf(stderr, stderr, "%f", ptr->as_float);
             }
             else if (ptr->type == TAG_STRING)
             {
-                printf("%s", ptr->as_string);
+                ffprintf(stderr, stderr, "%s", ptr->as_string);
             }
             else if (ptr->type == TAG_BOOLEAN)
             {
-                printf(ptr->as_boolean ? "true" : "false");
+                ffprintf(stderr, stderr, ptr->as_boolean ? "true" : "false");
             }
             else if (ptr->type == TAG_BLOCK)
             {
-                printf("{block}");
+                ffprintf(stderr, stderr, "{block}");
             }
             else
             {
-                printf("{UNKNOWN}");
+                ffprintf(stderr, stderr, "{UNKNOWN}");
             }
-            printf(" ");
+            ffprintf(stderr, stderr, " ");
         }
     }
 
     if (names != NULL)
     {
-        printf("NAMES: ");
+        fprintf(stderr, "NAMES: ");
         while (names != NULL)
         {
-            printf("%s=", get_name(names->name));
+            fprintf(stderr, "%s=", get_name(names->name));
             if (names->value->type == TAG_NUMBER_INTEGER)
             {
-                printf("%lld", names->value->as_integer);
+                fprintf(stderr, "%lld", names->value->as_integer);
             }
             else if (names->value->type == TAG_NUMBER_FLOAT)
             {
-                printf("%f", names->value->as_float);
+                fprintf(stderr, "%f", names->value->as_float);
             }
             else if (names->value->type == TAG_STRING)
             {
-                printf("%s", names->value->as_string);
+                fprintf(stderr, "%s", names->value->as_string);
             }
             else if (names->value->type == TAG_BOOLEAN)
             {
-                printf(names->value->as_boolean ? "true" : "false");
+                fprintf(stderr, names->value->as_boolean ? "true" : "false");
             }
             else if (names->value->type == TAG_BLOCK)
             {
-                printf("{block}");
+                fprintf(stderr, "{block}");
             }
             else
             {
-                printf("{UNKNOWN}");
+                fprintf(stderr, "{UNKNOWN}");
             }
 
             if (names->boundary && names->prev != NULL)
             {
-                printf(" | ");
+                fprintf(stderr, " | ");
             }
             else
             {
-                printf(" ");
+                fprintf(stderr, " ");
             }
 
             names = names->prev;
         }
     }
 
-    printf("\n");
+    fprintf(stderr, "\n");
 }

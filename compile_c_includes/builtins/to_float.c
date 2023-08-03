@@ -19,12 +19,12 @@
     }
     else if (v->type == TAG_BLOCK)
     {
-        printf("error: cannot cast block to float");
+        fprintf(stderr, "error: cannot cast block to float");
         exit(1);
     }
     else
     {
-        printf("error: unknown type to cast to float");
+        fprintf(stderr, "error: unknown type to cast to float");
         exit(1);
     }
 

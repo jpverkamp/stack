@@ -21,7 +21,7 @@
     }
     else
     {
-        printf("Error: loop iterator must be an integer (others todo)\n");
+        fprintf(stderr, "Error: loop iterator must be an integer (others todo)\n");
         exit(1);
     }
 }

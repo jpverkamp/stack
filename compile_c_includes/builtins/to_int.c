@@ -19,12 +19,12 @@
     }
     else if (v->type == TAG_BLOCK)
     {
-        printf("error: cannot cast block to int");
+        fprintf(stderr, "error: cannot cast block to int");
         exit(1);
     }
     else
     {
-        printf("error: unknown type to cast to int");
+        fprintf(stderr, "error: unknown type to cast to int");
         exit(1);
     }
 

@@ -17,7 +17,10 @@ macro_rules! numeric_binop {
     {{
         Value *b = stack_ptr--;
         Value *a = stack_ptr--;
-        coerce(a, b);
+
+        if (a->type != b->type) {{
+            
+        }}
         
         if (a->type == TAG_NUMBER_INTEGER) {{
             Value result = {{.type=TAG_NUMBER_INTEGER, .as_integer=a->as_integer {op} b->as_integer}};
