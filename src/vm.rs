@@ -254,6 +254,10 @@ pub fn evaluate(ast: Expression) {
                     }
                 }
             }
+            // Dotted identifiers are used to access fields in structs
+            Expression::DottedIdentifier(ids) => {
+                unimplemented!("evaluate dotted identifiers: {:?}", ids)
+            },
             // Literal values are just pushed onto the stack
             Expression::Literal(value) => stack.push(value.clone()),
             // Blocks are parsed into block values, arity is calculated here

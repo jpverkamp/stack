@@ -9,6 +9,7 @@ example-run name:
     time cargo run --release -- --file examples/{{name}}.stack
 
 example-compile name:
+    mkdir -p output
     cargo run --release -- --file examples/{{name}}.stack --compile > output/{{name}}.c
     clang -Ofast output/{{name}}.c -o output/{{name}}
     time output/{{name}}
@@ -17,6 +18,7 @@ example-run-debug name:
     cargo run -- --debug --file examples/{{name}}.stack
 
 example-compile-debug name:
+    mkdir -p output
     cargo run -- --debug --file examples/{{name}}.stack --compile > output/{{name}}.c
     clang output/{{name}}.c -o output/{{name}}
     output/{{name}}

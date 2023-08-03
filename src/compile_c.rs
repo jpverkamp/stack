@@ -80,6 +80,7 @@ fn collect_names(ast: &Expression) -> HashMap<String, usize> {
     fn collect_names_expr(expr: &Expression, names: &mut HashMap<String, usize>) {
         match expr {
             Expression::Identifier(_)
+            | Expression::DottedIdentifier(_)
             | Expression::Literal(_)
             | Expression::Bang(_)
             | Expression::Dollar(_) => {
@@ -267,6 +268,9 @@ pub fn compile(ast: Expression) -> String {
                     }
                 }
             }
+            Expression::DottedIdentifier(ids) => {
+                unimplemented!("compile_expr for dotted identifiers: {:?}", ids)
+            },
             Expression::Literal(value) => {
                 let (tag, field, value) = match value {
                     // TODO: additional numeric tyhpes

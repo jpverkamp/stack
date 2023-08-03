@@ -83,6 +83,8 @@ impl Display for Value {
 pub enum Expression {
     /// An identifier/variable, used to lookup a named value or global
     Identifier(String),
+    /// A dotted expression, used to lookup fields in structs
+    DottedIdentifier(Vec<String>),
     /// A literal value
     Literal(Value),
 
@@ -121,6 +123,7 @@ impl Display for Expression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Expression::Identifier(id) => write!(f, "{}", id),
+            Expression::DottedIdentifier(ids) => write!(f, "{}", ids.join(".")),
             Expression::Literal(value) => write!(f, "{}", value),
             Expression::Block(children) => write_children! {f '{' children '}'},
             Expression::List(children) => write_children! {f '[' children ']'},

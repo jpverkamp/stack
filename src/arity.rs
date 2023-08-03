@@ -14,6 +14,9 @@ pub fn calculate_arity(expression: &Expression) -> Result<(usize, usize), String
                 id
             ),
         },
+        Expression::DottedIdentifier(ids) => {
+            unimplemented!("calculate_arity for dotted identifiers: {:?}", ids)
+        },
         Expression::Literal(_) => Ok((0, 1)),
         Expression::Block(children) => {
             // Set the arity based on the At and Bang nodes

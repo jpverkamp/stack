@@ -13,6 +13,7 @@ pub fn tokenize(reader: impl BufRead) -> Vec<Token> {
     let token_patterns = vec![
         // single characters
         r"[\{}()\[\]]",
+        
         // <numbers>
         // complex numbers
         r"-?\d+(\.\d*)?[+-]-?\d+(\.\d*)?i",
@@ -27,12 +28,13 @@ pub fn tokenize(reader: impl BufRead) -> Vec<Token> {
         // integers
         r"-?\d+(\.\d*)?",
         // </numbers>
+
         // strings
         "\"(\\.|[^\"])*\"",
         // basic identifiers, must start with a letter or _
-        r"[a-zA-Z][^\{}()\[\]\s\.]*",
+        r"[a-zA-Z][^\{}()\[\]\s]*",
         // purely symbolic identifiers, cannot contain letters or numbers
-        r"[^a-zA-Z0-9\{}()\[\]\s\.]+",
+        r"[^a-zA-Z0-9\{}()\[\]\s]+",
     ];
     let token_regex = Regex::new(format!("^({})", token_patterns.join("|")).as_str()).unwrap();
     let whitespace_regex = Regex::new(r"^\s+").unwrap();

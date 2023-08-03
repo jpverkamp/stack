@@ -1,0 +1,9 @@
+@[x y] @Point
+
+5 3 Point.new @p
+
+p.x writeln
+p.y writeln
+
+6 @p.x
+p.x writeln

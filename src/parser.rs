@@ -55,6 +55,17 @@ pub fn parse(tokens: Vec<Token>) -> Expression {
                     Expression::Literal(Value::Boolean(tokens[0].token == "true")),
                     &tokens[1..],
                 )
+            } else if tokens[0].token.contains(".") {
+                (
+                    Expression::DottedIdentifier(
+                        tokens[0]
+                            .token
+                            .split(".")
+                            .map(|s| s.to_string())
+                            .collect(),
+                    ),
+                    &tokens[1..],
+                )
             } else {
                 (
                     Expression::Identifier(tokens[0].token.clone()),
@@ -152,6 +163,40 @@ mod test {
                 Expression::Literal(Value::Number(Number::Integer(2))),
                 Expression::Identifier(String::from("+")),
             ])
+        );
+    }
+
+    #[test]
+    fn test_identifier() {
+        let input = tokenize("a".as_bytes());
+        let output = parse(input);
+        assert_eq!(
+            output,
+            Expression::Group(vec![Expression::Identifier(String::from("a"))])
+        );
+    }
+
+    #[test]
+    fn test_symbolic_identifier() {
+        let input = tokenize("<=".as_bytes());
+        let output = parse(input);
+        assert_eq!(
+            output,
+            Expression::Group(vec![Expression::Identifier(String::from("<="))])
+        );
+    }
+
+    #[test]
+    fn test_dotted_identifier() {
+        let input = tokenize("a.b.c".as_bytes());
+        let output = parse(input);
+        assert_eq!(
+            output,
+            Expression::Group(vec![Expression::DottedIdentifier(vec![
+                String::from("a"),
+                String::from("b"),
+                String::from("c"),
+            ])])
         );
     }
 
