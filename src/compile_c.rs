@@ -276,8 +276,14 @@ pub fn compile(ast: Expression) -> String {
                     // TODO: additional numeric tyhpes
                     Value::Number(Number::Integer(v)) => {
                         ("TAG_NUMBER_INTEGER", "integer", v.to_string())
-                    }
+                    },
+                    Value::Number(Number::Rational { .. }) => {
+                        unimplemented!()
+                    },
                     Value::Number(Number::Float(v)) => ("TAG_NUMBER_FLOAT", "float", v.to_string()),
+                    Value::Number(Number::Complex { .. }) => {
+                        unimplemented!()
+                    },
                     Value::String(v) => ("TAG_STRING", "string", format!("{v:?}")),
                     Value::Boolean(v) => ("TAG_BOOLEAN", "boolean", format!("{v:?}")),
                     Value::Block { .. } => panic!("Blocks should be compiled separately"),

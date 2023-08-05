@@ -39,7 +39,14 @@ impl Display for Number {
             "{}",
             match self {
                 Number::Integer(v) => v.to_string(),
+                Number::Rational { numerator, denominator } => format!("{}/{}", numerator, denominator),
                 Number::Float(v) => v.to_string(),
+                Number::Complex { real, imaginary } => 
+                    if *imaginary < 0.0 {
+                        format!("{}{}i", real, imaginary)
+                    } else {
+                        format!("{}+{}i", real, imaginary)
+                    }
             }
         )
     }
