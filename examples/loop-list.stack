@@ -1,0 +1,4 @@
+{ 
+    @n
+    n 2 *
+} 10 loop->list writeln

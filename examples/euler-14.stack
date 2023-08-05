@@ -51,6 +51,6 @@ results "best-l" 1 hash-set!
   } 
   { @0 !0 }
   l results "best-l" hash-get > if
-} 1000000 loop
+} 10000 loop
 
 results "best-v" hash-get writeln

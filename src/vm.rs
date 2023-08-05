@@ -196,8 +196,73 @@ pub fn evaluate(ast: Expression) {
                                     }
                                 }
                             },
+                            Value::List(l) => {
+                                for value in l.clone().borrow().iter() {
+                                    stack.push(value.clone());
+                                    match block.clone() {
+                                        Value::Block { arity_in, arity_out, expression } => {
+                                            eval_block(stack, arity_in, expression, arity_out);
+                                        },
+                                        _ => panic!("loop must have a block, got {}", block),
+                                    }
+                                }
+                            }
                             _ => panic!("loop must have an iterable (currently an integer or string), got {}", iterable),
                         };
+                    }
+                    // Loop over an iterable and store the results as a list
+                    "loop->list" => {
+                        let iterable = stack.pop().unwrap();
+                        let block = stack.pop().unwrap();
+                        let mut result = vec![];
+
+                        match iterable {
+                            Value::Number(Number::Integer(n)) => {
+                                if n < 0 {
+                                    panic!("numeric loops must have a positive integer, got {}", n);
+                                }
+
+                                for i in 0..n {
+                                    stack.push(Value::Number(Number::Integer(i)));
+                                    match block.clone() {
+                                        // Blocks get evaluated lazily (now)
+                                        Value::Block { arity_in, arity_out, expression } => {
+                                            eval_block(stack, arity_in, expression, arity_out);
+                                            result.push(stack.pop().unwrap());
+                                        },
+                                        // Loops must have a block
+                                        _ => panic!("loop must have a block, got {}", block),
+                                    }
+                                }
+                            },
+                            Value::String(s) => {
+                                for c in s.chars() {
+                                    stack.push(Value::String(c.to_string()));
+                                    match block.clone() {
+                                        Value::Block { arity_in, arity_out, expression } => {
+                                            eval_block(stack, arity_in, expression, arity_out);
+                                            result.push(stack.pop().unwrap());
+                                        },
+                                        _ => panic!("loop must have a block, got {}", block),
+                                    }
+                                }
+                            },
+                            Value::List(l) => {
+                                for value in l.clone().borrow().iter() {
+                                    stack.push(value.clone());
+                                    match block.clone() {
+                                        Value::Block { arity_in, arity_out, expression } => {
+                                            eval_block(stack, arity_in, expression, arity_out);
+                                            result.push(stack.pop().unwrap());
+                                        },
+                                        _ => panic!("loop must have a block, got {}", block),
+                                    }
+                                }
+                            }
+                            _ => panic!("loop must have an iterable (currently an integer or string), got {}", iterable),
+                        };
+
+                        stack.push(Value::List(Rc::new(RefCell::new(result))));
                     }
                     // If statement, expects two blocks or literals and a conditional (must be boolean)
                     "if" => {
@@ -379,6 +444,25 @@ pub fn evaluate(ast: Expression) {
                             _ => panic!("list-ref: expected list, got {}", list),
                         }
                     }
+                    "list-set!" => {
+                        let value = stack.pop().unwrap();
+                        let index = stack.pop().unwrap();
+                        let list = stack.pop().unwrap();
+
+                        match list {
+                            Value::List(l) => match index {
+                                Value::Number(Number::Integer(i)) => {
+                                    if let Some(old_value) = l.clone().borrow_mut().get_mut(i as usize) {
+                                        *old_value = value.clone();
+                                    } else {
+                                        panic!("list-set!: index out of bounds: {}", i);
+                                    }
+                                }
+                                _ => panic!("list-set!: index must be an integer, got {}", index),
+                            },
+                            _ => panic!("list-set!: expected list, got {}", list),
+                        }
+                    }
                     // Hashmap implementation
                     "make-hash" => {
                         let hash = Value::Hash(Rc::new(RefCell::new(HashMap::new())));
@@ -554,8 +638,7 @@ pub fn evaluate(ast: Expression) {
 
                     // Write to a named variable
                     Expression::Identifier(name) => {
-                        let value = stack.pop().unwrap();
-                        stack.set_named(name.clone(), value);
+                        unimplemented!("write to named variable: {:?} (won't currently work because of copy)", name)
                     }
 
                     // Anything else doesn't currently make sense

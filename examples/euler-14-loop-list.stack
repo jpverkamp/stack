@@ -1,0 +1,71 @@
+# https://projecteuler.net/problem=14
+# Which starting number, under one million, produces the longest Collatz chain?
+
+10000 @bound
+
+{ @n !1 0 } bound 2 * loop->list @cache
+cache 0 1 list-set!
+cache 1 1 list-set!
+
+# make-list @cache
+# cache 1 list-push! 
+# cache 1 list-push! 
+
+{
+  @n
+
+  # Extend the cache if needed
+  n cache list-length - 2 + @extension
+  { 
+    @0 !0
+    { 
+      @0 !0
+      cache 0 list-push! 
+    } extension loop 
+  }
+  { @0 !0 }
+  extension 0 > if
+
+  [
+    # Already cached
+    { @0 !1 cache n list-ref 0 > } { @0 !1 cache n list-ref }
+
+    # Base case
+    { @0 !1 n 1 <= } 1
+    
+    # If n is even, divide by 2
+    { @0 !1 n 2 % 0 = } { @0 !1 n 2 / collatz-length 1 + }
+    
+    # Default: If n is odd, multiply by 3 and add 1
+    { @0 !1 n 3 * 1 + collatz-length 1 +}
+  ] cond
+  @l
+
+  cache n l list-set!
+  l
+} @collatz-length
+
+# Store best value so far
+[1 1] @best
+
+# Check each value under 1 million
+{
+  @v
+  v 1 + @v
+  v collatz-length @l
+
+  {
+    @0 !0
+    best 0 v list-set!
+    best 1 l list-set!
+
+    "new best: " write
+    v write
+    " -> " write
+    l writeln
+  } 
+  { @0 !0 }
+  l best 1 list-ref > if
+} bound loop
+
+best 0 list-ref writeln
