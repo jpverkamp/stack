@@ -33,7 +33,7 @@ results "best-l" 1 hash-set!
 # Check each value under 1 million
 {
   @v
-  v 1 + @v
+  v 1 + !v
   v collatz-length @l
 
   {

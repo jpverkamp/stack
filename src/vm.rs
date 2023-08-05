@@ -638,7 +638,8 @@ pub fn evaluate(ast: Expression) {
 
                     // Write to a named variable
                     Expression::Identifier(name) => {
-                        unimplemented!("write to named variable: {:?} (won't currently work because of copy)", name)
+                        let value = stack.pop().unwrap();
+                        stack.set_named(name.clone(), value);
                     }
 
                     // Anything else doesn't currently make sense
