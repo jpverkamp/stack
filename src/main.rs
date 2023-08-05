@@ -1,6 +1,6 @@
 use clap::*;
 use log;
-use std::{io::BufReader, env, path::PathBuf};
+use std::{env, io::BufReader, path::PathBuf};
 
 mod debug;
 
@@ -53,7 +53,7 @@ enum Command {
 
         /// Input filename
         path: PathBuf,
-    },   
+    },
 }
 
 fn main() {
@@ -70,7 +70,7 @@ fn main() {
             Ok(s) if s.to_lowercase() == "true" => unsafe {
                 debug::ENABLED = true;
             },
-            _ => {},
+            _ => {}
         }
     }
     unsafe {
@@ -92,7 +92,7 @@ fn main() {
             log::info!("AST:\n{:#?}", ast);
 
             vm::evaluate(ast);
-        },
+        }
         Command::Compile { run, output, path } => {
             let file = std::fs::File::open(path.clone()).unwrap();
 
@@ -111,11 +111,11 @@ fn main() {
                     let mut c_path = path.clone();
                     c_path.set_extension("c");
                     c_path
-                },
+                }
             };
             log::info!("Writing C code to {}", c_path.to_str().unwrap());
             std::fs::write(c_path.clone(), c_code).unwrap();
-            
+
             // If run flag is set, compile and run
             if run {
                 let exe_path = {
@@ -139,6 +139,6 @@ fn main() {
                     panic!("program failed");
                 }
             }
-        },
+        }
     }
 }

@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use crate::types::Value;
-use std::{collections::HashMap, fmt::Display, rc::Rc};
+use std::{collections::HashMap, fmt::Display, rc::Rc, cell::RefCell};
 
 /// A stack in the context of the VM
 ///
@@ -14,7 +14,7 @@ pub struct Stack {
     // A mapping of names to indices in the data
     names: HashMap<String, usize>,
     // The parent of this stack for name lookups
-    parent: Option<Rc<Stack>>,
+    parent: Option<Rc<RefCell<Stack>>>,
 }
 
 impl Stack {
@@ -36,7 +36,7 @@ impl Stack {
         Stack {
             data: values,
             names: HashMap::new(),
-            parent: Some(Rc::new(self.clone())),
+            parent: Some(Rc::new(RefCell::new(self.clone()))),
         }
     }
 
@@ -78,11 +78,28 @@ impl Stack {
         if self.names.contains_key(&name) {
             Some(self.data[self.names[&name]].clone())
         } else if self.parent.is_some() {
-            self.parent.as_ref().unwrap().get_named(name)
+            self.parent.as_ref().unwrap().borrow().get_named(name)
         } else {
             None
         }
     }
+
+    /// Set a named value on this stack (including the parent)
+    /// 
+    /// If this stack doesn't have it, check the parent
+    /// If it's not found, panic!
+    pub fn set_named(&mut self, name: String, value: Value) {
+        log::debug!("set_named({}, {}) on {}", name, value, self);
+
+        if self.names.contains_key(&name) {
+            self.data[self.names[&name]] = value;
+        } else if self.parent.is_some() {
+            self.parent.as_ref().unwrap().clone().borrow_mut().set_named(name, value);
+        } else {
+            panic!("set_named({}, {}) on {}", name, value, self);
+        }
+    }
+    
 }
 
 impl Display for Stack {
@@ -90,7 +107,7 @@ impl Display for Stack {
         let mut s = String::new();
 
         if self.parent.is_some() {
-            s.push_str(self.parent.as_ref().unwrap().to_string().as_str());
+            s.push_str(self.parent.as_ref().unwrap().borrow().to_string().as_str());
             s.push_str(" : ");
         }
 

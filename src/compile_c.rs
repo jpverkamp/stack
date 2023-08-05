@@ -150,7 +150,9 @@ pub fn compile(ast: Expression) -> String {
         if debug::ENABLED {
             lines.push("char* get_name(int index) {".to_string());
             for (name, index) in names.iter() {
-                lines.push(format!("    if (index == {index}) {{ return \"{name}\"; }}"));
+                lines.push(format!(
+                    "    if (index == {index}) {{ return \"{name}\"; }}"
+                ));
             }
             lines.push("    return \"<unknown>\";".to_string());
             lines.push("}".to_string());
@@ -164,7 +166,8 @@ pub fn compile(ast: Expression) -> String {
 
     unsafe {
         if debug::ENABLED {
-            lines.push(include_str!("../compile_c_includes/stack_dump.c").to_string()); // DEBUG
+            lines.push(include_str!("../compile_c_includes/stack_dump.c").to_string());
+            // DEBUG
         }
     }
 
@@ -189,7 +192,9 @@ pub fn compile(ast: Expression) -> String {
                 .collect::<Vec<String>>()
                 .join(" ")
         ));
-        lines.push(format!("\n    // Store the current stack pointer with arity_in={arity_in}"));
+        lines.push(format!(
+            "\n    // Store the current stack pointer with arity_in={arity_in}"
+        ));
         lines.push(format!("    *(++frame_ptr) = (stack_ptr - {arity_in});\n"));
 
         // Compile the block itself
@@ -200,8 +205,12 @@ pub fn compile(ast: Expression) -> String {
         }
 
         // Pop the block off the stack
-        lines.push(format!("    // Pop the block off the stack, preserving arity_out={arity_out} values"));
-        lines.push(format!("    Value* return_ptr = (stack_ptr - {arity_out});"));
+        lines.push(format!(
+            "    // Pop the block off the stack, preserving arity_out={arity_out} values"
+        ));
+        lines.push(format!(
+            "    Value* return_ptr = (stack_ptr - {arity_out});"
+        ));
         lines.push(format!("    stack_ptr =  *(frame_ptr--);"));
         for _ in 0..arity_out {
             lines.push(format!("    *(++stack_ptr) = *(++return_ptr);"));
@@ -237,17 +246,27 @@ pub fn compile(ast: Expression) -> String {
                     ">" => numeric_compare!(lines, ">"),
 
                     // Built ins
-                    "read" => lines.push(include_str!("../compile_c_includes/builtins/read.c").to_string()),
-                    "write" => lines.push(include_str!("../compile_c_includes/builtins/write.c").to_string()),
+                    "read" => lines
+                        .push(include_str!("../compile_c_includes/builtins/read.c").to_string()),
+                    "write" => lines
+                        .push(include_str!("../compile_c_includes/builtins/write.c").to_string()),
                     "writeln" => {
-                        lines.push(include_str!("../compile_c_includes/builtins/write.c").to_string());
+                        lines.push(
+                            include_str!("../compile_c_includes/builtins/write.c").to_string(),
+                        );
                         lines.push("printf(\"\\n\");".to_string());
-                    },
+                    }
                     "newline" => lines.push("printf(\"\\n\");".to_string()),
-                    "loop" => lines.push(include_str!("../compile_c_includes/builtins/loop.c").to_string()),
-                    "if" => lines.push(include_str!("../compile_c_includes/builtins/if.c").to_string()),
-                    "to_float" => lines.push(include_str!("../compile_c_includes/builtins/to_float.c").to_string()),
-                    "to_int" => lines.push(include_str!("../compile_c_includes/builtins/to_int.c").to_string()),
+                    "loop" => lines
+                        .push(include_str!("../compile_c_includes/builtins/loop.c").to_string()),
+                    "if" => {
+                        lines.push(include_str!("../compile_c_includes/builtins/if.c").to_string())
+                    }
+                    "to_float" => lines.push(
+                        include_str!("../compile_c_includes/builtins/to_float.c").to_string(),
+                    ),
+                    "to_int" => lines
+                        .push(include_str!("../compile_c_includes/builtins/to_int.c").to_string()),
 
                     // Attempt to lookup in names table
                     id => {
@@ -270,23 +289,25 @@ pub fn compile(ast: Expression) -> String {
             }
             Expression::DottedIdentifier(ids) => {
                 unimplemented!("compile_expr for dotted identifiers: {:?}", ids)
-            },
+            }
             Expression::Literal(value) => {
                 let (tag, field, value) = match value {
                     // TODO: additional numeric tyhpes
                     Value::Number(Number::Integer(v)) => {
                         ("TAG_NUMBER_INTEGER", "integer", v.to_string())
-                    },
+                    }
                     Value::Number(Number::Rational { .. }) => {
                         unimplemented!()
-                    },
+                    }
                     Value::Number(Number::Float(v)) => ("TAG_NUMBER_FLOAT", "float", v.to_string()),
                     Value::Number(Number::Complex { .. }) => {
                         unimplemented!()
-                    },
+                    }
                     Value::String(v) => ("TAG_STRING", "string", format!("{v:?}")),
                     Value::Boolean(v) => ("TAG_BOOLEAN", "boolean", format!("{v:?}")),
                     Value::Block { .. } => panic!("Blocks should be compiled separately"),
+                    Value::Hash(_) => unimplemented!(),
+                    Value::IntHash(_) => unimplemented!(),
                 };
 
                 lines.push(format!(
@@ -338,7 +359,7 @@ pub fn compile(ast: Expression) -> String {
                             match id_expr {
                                 Expression::Identifier(id) => {
                                     let id = sanitize_name(id);
-                                    
+
                                     lines.push(format!(
                                         "
     {{ 
@@ -358,7 +379,7 @@ pub fn compile(ast: Expression) -> String {
             }
             Expression::Bang(v) => {
                 match v.as_ref() {
-                    Expression::Literal(Value::Number(Number::Integer(_))) => {}, // Used only for arity out expressions
+                    Expression::Literal(Value::Number(Number::Integer(_))) => {} // Used only for arity out expressions
                     _ => todo!(),
                 }
             }
@@ -399,9 +420,11 @@ pub fn compile(ast: Expression) -> String {
     lines.push("\n// Actual block definitions".to_string());
     for (i, block) in blocks.iter().enumerate() {
         lines.push(format!("void block_{i}(Name *block_names) {{").to_string());
-        lines.push(format!("    if (block_names != NULL) block_names->boundary = true;").to_string());
+        lines.push(
+            format!("    if (block_names != NULL) block_names->boundary = true;").to_string(),
+        );
         lines.push(format!("    Name* names = block_names;").to_string());
-        
+
         unsafe {
             if debug::ENABLED {
                 lines.push(format!("    printf(\"[DEBUG] block_{i} called --\");").to_string()); // DEBUG
@@ -419,13 +442,16 @@ pub fn compile(ast: Expression) -> String {
         }
 
         lines.push("    // Free names bound in this block".to_string());
-        lines.push("    
+        lines.push(
+            "    
     while (names != NULL && block_names != names) {
         Name *next = names->prev;
         free(names);
         names = next;
     }
-        ".to_string());
+        "
+            .to_string(),
+        );
         lines.push("}".to_string());
     }
 

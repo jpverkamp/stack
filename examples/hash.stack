@@ -1,0 +1,10 @@
+make-hash @h
+
+h "x" 5 hash-set!
+h "y" 6 hash-set!
+
+h writeln
+h "x" hash-get
+
+h "x" 7 hash-set!
+h writeln

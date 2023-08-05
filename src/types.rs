@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use crate::numbers::Number;
-use std::fmt::Display;
+use std::{cell::RefCell, collections::HashMap, fmt::Display, rc::Rc};
 
 /// A span is a location in the source code.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -39,14 +39,17 @@ impl Display for Number {
             "{}",
             match self {
                 Number::Integer(v) => v.to_string(),
-                Number::Rational { numerator, denominator } => format!("{}/{}", numerator, denominator),
+                Number::Rational {
+                    numerator,
+                    denominator,
+                } => format!("{}/{}", numerator, denominator),
                 Number::Float(v) => v.to_string(),
-                Number::Complex { real, imaginary } => 
+                Number::Complex { real, imaginary } =>
                     if *imaginary < 0.0 {
                         format!("{}{}i", real, imaginary)
                     } else {
                         format!("{}+{}i", real, imaginary)
-                    }
+                    },
             }
         )
     }
@@ -64,6 +67,8 @@ pub enum Value {
         arity_out: usize,
         expression: Box<Expression>,
     },
+    Hash(Rc<RefCell<HashMap<String, Value>>>),
+    IntHash(Rc<RefCell<HashMap<i64, Value>>>),
 }
 
 impl Display for Value {
@@ -80,6 +85,28 @@ impl Display for Value {
                     arity_out,
                     ..
                 } => format!("{{{}->{}}}", arity_in, arity_out),
+                Value::Hash(v) => {
+                    format!(
+                        "Hash<{}>",
+                        v.clone()
+                            .borrow()
+                            .iter()
+                            .map(|(k, v)| format!("{}:{}", k, v))
+                            .collect::<Vec<String>>()
+                            .join(", ")
+                    )
+                },
+                Value::IntHash(v) => {
+                    format!(
+                        "IntHash<{}>",
+                        v.clone()
+                            .borrow()
+                            .iter()
+                            .map(|(k, v)| format!("{}:{}", k, v))
+                            .collect::<Vec<String>>()
+                            .join(", ")
+                    )
+                }
             }
         )
     }

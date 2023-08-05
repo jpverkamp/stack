@@ -58,11 +58,7 @@ pub fn parse(tokens: Vec<Token>) -> Expression {
             } else if tokens[0].token.contains(".") {
                 (
                     Expression::DottedIdentifier(
-                        tokens[0]
-                            .token
-                            .split(".")
-                            .map(|s| s.to_string())
-                            .collect(),
+                        tokens[0].token.split(".").map(|s| s.to_string()).collect(),
                     ),
                     &tokens[1..],
                 )

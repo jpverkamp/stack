@@ -6,9 +6,9 @@ use std::ops::*;
 #[derive(Copy, Clone, Debug)]
 pub enum Number {
     Integer(i64),
-    Rational{ numerator: i64, denominator: u64 },
+    Rational { numerator: i64, denominator: u64 },
     Float(f64),
-    Complex{ real: f64, imaginary: f64 },
+    Complex { real: f64, imaginary: f64 },
 }
 
 impl Number {
@@ -19,24 +19,24 @@ impl Number {
 
         match (a, b) {
             (Integer(_), Integer(_)) => (a, b),
-            (Integer(_), Rational{..}) => (a.to_rational(), b),
+            (Integer(_), Rational { .. }) => (a.to_rational(), b),
             (Integer(_), Float(_)) => (a.to_float(), b),
-            (Integer(_), Complex{..}) => (a.to_complex(), b),
+            (Integer(_), Complex { .. }) => (a.to_complex(), b),
 
-            (Rational{..}, Integer(_)) => (a, b.to_rational()),
-            (Rational{..}, Rational{..}) => (a, b),
-            (Rational{..}, Float(_)) => (a.to_float(), b),
-            (Rational{..}, Complex{..}) => (a.to_complex(), b),
+            (Rational { .. }, Integer(_)) => (a, b.to_rational()),
+            (Rational { .. }, Rational { .. }) => (a, b),
+            (Rational { .. }, Float(_)) => (a.to_float(), b),
+            (Rational { .. }, Complex { .. }) => (a.to_complex(), b),
 
             (Float(_), Integer(_)) => (a, b.to_float()),
-            (Float(_), Rational{..}) => (a, b.to_float()),
+            (Float(_), Rational { .. }) => (a, b.to_float()),
             (Float(_), Float(_)) => (a, b),
-            (Float(_), Complex{..}) => (a.to_complex(), b),
+            (Float(_), Complex { .. }) => (a.to_complex(), b),
 
-            (Complex{..}, Integer(_)) => (a, b.to_complex()),
-            (Complex{..}, Rational{..}) => (a, b.to_complex()),
-            (Complex{..}, Float(_)) => (a, b.to_complex()),
-            (Complex{..}, Complex{..}) => (a, b),
+            (Complex { .. }, Integer(_)) => (a, b.to_complex()),
+            (Complex { .. }, Rational { .. }) => (a, b.to_complex()),
+            (Complex { .. }, Float(_)) => (a, b.to_complex()),
+            (Complex { .. }, Complex { .. }) => (a, b),
         }
     }
 
@@ -47,7 +47,10 @@ impl Number {
 
         match self {
             Integer(_) => self,
-            Rational { numerator, denominator } => Integer((numerator as f64 / denominator as f64) as i64),
+            Rational {
+                numerator,
+                denominator,
+            } => Integer((numerator as f64 / denominator as f64) as i64),
             Float(v) => Integer(v as i64),
             Complex { real, .. } => Integer(real as i64),
         }
@@ -60,10 +63,19 @@ impl Number {
         use Number::*;
 
         match self {
-            Integer(v) => Rational { numerator: v, denominator: 1 },
-            Rational {..} => self,
-            Float(v) => Rational { numerator: v as i64, denominator: 1 },
-            Complex { real, .. } => Rational { numerator: real as i64, denominator: 1 },
+            Integer(v) => Rational {
+                numerator: v,
+                denominator: 1,
+            },
+            Rational { .. } => self,
+            Float(v) => Rational {
+                numerator: v as i64,
+                denominator: 1,
+            },
+            Complex { real, .. } => Rational {
+                numerator: real as i64,
+                denominator: 1,
+            },
         }
     }
 
@@ -74,7 +86,10 @@ impl Number {
 
         match self {
             Integer(v) => Float(v as f64),
-            Rational { numerator, denominator } => Float(numerator as f64 / denominator as f64),
+            Rational {
+                numerator,
+                denominator,
+            } => Float(numerator as f64 / denominator as f64),
             Float(_) => self,
             Complex { real, .. } => Float(real),
         }
@@ -85,10 +100,22 @@ impl Number {
         use Number::*;
 
         match self {
-            Integer(v) => Complex { real: v as f64, imaginary: 0.0 },
-            Rational { numerator, denominator } => Complex { real: numerator as f64 / denominator as f64, imaginary: 0.0 },
-            Float(v) => Complex { real: v, imaginary: 0.0 },
-            Complex {..} => self,
+            Integer(v) => Complex {
+                real: v as f64,
+                imaginary: 0.0,
+            },
+            Rational {
+                numerator,
+                denominator,
+            } => Complex {
+                real: numerator as f64 / denominator as f64,
+                imaginary: 0.0,
+            },
+            Float(v) => Complex {
+                real: v,
+                imaginary: 0.0,
+            },
+            Complex { .. } => self,
         }
     }
 }
@@ -105,7 +132,7 @@ macro_rules! do_op {
                     (
                         Number::Rational { numerator: an, denominator: ad },
                         Number::Rational { numerator: bn, denominator: bd }
-                    ) => Number::Rational { 
+                    ) => Number::Rational {
                         numerator: an $op bn,
                         denominator: (ad $op bd) as u64
                     },

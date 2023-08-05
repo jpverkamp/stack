@@ -1,3 +1,7 @@
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::rc::Rc;
+
 use crate::arity::calculate_arity;
 use crate::numbers::Number;
 use crate::stack::Stack;
@@ -236,6 +240,89 @@ pub fn evaluate(ast: Expression) {
                             }
                         }
                     }
+                    // Hashmap implementation
+                    "make-hash" => {
+                        let hash = Value::Hash(Rc::new(RefCell::new(HashMap::new())));
+                        stack.push(hash);
+                    },
+                    "make-int-hash" => {
+                        let hash = Value::IntHash(Rc::new(RefCell::new(HashMap::new())));
+                        stack.push(hash);
+                    }
+                    "hash-has?" => {
+                        let key = stack.pop().unwrap();
+                        let hash = stack.pop().unwrap();
+
+                        match hash {
+                            Value::Hash(h) => match key {
+                                Value::String(s) => {
+                                    stack.push(Value::Boolean(h.clone().borrow().contains_key(&s)));
+                                }
+                                _ => panic!("hash-has?: Hash key must be a string, got {}", key),
+                            },
+                            Value::IntHash(h) => match key {
+                                Value::Number(Number::Integer(v)) => {
+                                    stack.push(Value::Boolean(h.clone().borrow().contains_key(&v)));
+                                }
+                                _ => panic!("hash-has?: IntHash key must be an integer, got {}", key),
+                            },
+                            _ => panic!("hash-has?: hash must be a hash, got {}", hash),
+                        }
+                    },
+                    "hash-get" => {
+                        let key = stack.pop().unwrap();
+                        let hash = stack.pop().unwrap();
+
+                        match hash {
+                            Value::Hash(h) => match key {
+                                Value::String(s) => {
+                                    if let Some(value) = h.clone().borrow().get(&s) {
+                                        stack.push(value.clone());
+                                    } else {
+                                        panic!("hash-get: key not found: {}", s);
+                                    }
+                                }
+                                _ => panic!("hash-get: Hash key must be a string, got {}", key),
+                            },
+                            Value::IntHash(h) => match key {
+                                Value::Number(Number::Integer(v)) => {
+                                    if let Some(value) = h.clone().borrow().get(&v) {
+                                        stack.push(value.clone());
+                                    } else {
+                                        panic!("hash-get: key not found: {}", v);
+                                    }
+                                }
+                                _ => panic!("hash-get: IntHash key must be an integer, got {}", key),
+                            },
+                            _ => panic!("hash-get: hash must be a hash, got {}", hash),
+                        }
+                    }
+                    "hash-set!" => {
+                        let value = stack.pop().unwrap();
+                        let key = stack.pop().unwrap();
+                        let hash = stack.pop().unwrap();
+
+                        match hash {
+                            Value::Hash(h) => match key {
+                                Value::String(ref s) => {
+                                    h.clone().borrow_mut().insert(s.clone(), value);
+                                }
+                                _ => {
+                                    panic!("hash-set!: Hash key must be a string, got {}", key);
+                                }
+                            },
+                            Value::IntHash(h) => match key {
+                                Value::Number(Number::Integer(v)) => {
+                                    h.clone().borrow_mut().insert(v, value);
+                                }
+                                _ => {
+                                    panic!("hash-set!: IntHash key must be an integer, got {}", key);
+                                }
+                            },
+                            _ => panic!("hash-set!: hash must be a hash, got {}", hash),
+                        }
+                    }
+                    // Anything else is a variable lookup
                     name => {
                         if let Some(value) = stack.get_named(String::from(name)) {
                             if let Value::Block {
@@ -257,7 +344,7 @@ pub fn evaluate(ast: Expression) {
             // Dotted identifiers are used to access fields in structs
             Expression::DottedIdentifier(ids) => {
                 unimplemented!("evaluate dotted identifiers: {:?}", ids)
-            },
+            }
             // Literal values are just pushed onto the stack
             Expression::Literal(value) => stack.push(value.clone()),
             // Blocks are parsed into block values, arity is calculated here
@@ -314,7 +401,10 @@ pub fn evaluate(ast: Expression) {
                     Expression::Literal(Value::Number(Number::Integer(_))) => {}
 
                     // Write to a named variable
-                    Expression::Identifier(_name) => todo!(),
+                    Expression::Identifier(name) => {
+                        let value = stack.pop().unwrap();
+                        stack.set_named(name.clone(), value);
+                    }
 
                     // Anything else doesn't currently make sense
                     _ => panic!("Invalid ! expression, must be !# or !name, got {:?}", node),
