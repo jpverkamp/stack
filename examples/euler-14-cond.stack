@@ -1,6 +1,8 @@
 # https://projecteuler.net/problem=14
 # Which starting number, under one million, produces the longest Collatz chain?
 
+1000000 @bound
+
 make-int-hash @cache
 cache 1 1 hash-set!
 
@@ -31,7 +33,7 @@ results "best-l" 1 hash-set!
 # Check each value under 1 million
 {
   @v
-  v 1 + !v
+  v 1 + @v
   v collatz-length @l
 
   {
@@ -46,6 +48,6 @@ results "best-l" 1 hash-set!
   } 
   { @0 !0 }
   l results "best-l" hash-get > if
-} 10000 loop
+} bound loop
 
 results "best-v" hash-get writeln

@@ -1,7 +1,7 @@
 # https://projecteuler.net/problem=14
 # Which starting number, under one million, produces the longest Collatz chain?
 
-10000 @bound
+1000000 @bound
 
 { @n !1 0 } bound 2 * loop->list @cache
 cache 0 1 list-set!
