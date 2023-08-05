@@ -240,6 +240,85 @@ pub fn evaluate(ast: Expression) {
                             }
                         }
                     }
+                    // Cond statements are like if statements, but with multiple branches
+                    // They expect only an odd numbered list of blocks as input:
+                    // [ test1 value1 test2 value2 ... default ]
+                    // For each test/value pair. If test is true, value is returned and the cond exits
+                    // If no other block returns, return the result of the last block (default)
+                    // All tests should be blocks; values can be blocks or values
+                    "cond" => {
+                        let branches = stack.pop().unwrap();
+
+                        let l = match branches {
+                            Value::List(l) => l.clone(),
+                            _ => panic!("cond branches must be a list, got {}", branches),
+                        };
+
+                        let mut cond_returned = false;
+
+                        'cond_loop: for i in 0..(l.clone().borrow().len() / 2) {
+                            let test = &l.borrow()[i * 2];
+                            let value = &l.borrow()[i * 2 + 1];
+
+                            let test_result = match test.clone() {
+                                // Blocks get evaluated lazily (now)
+                                Value::Block {
+                                    arity_in,
+                                    arity_out,
+                                    expression,
+                                } => {
+                                    eval_block(stack, arity_in, expression, arity_out);
+                                    stack.pop().unwrap()
+                                }                                
+                                _ => panic!("cond test must be a block, got {}", test),
+                            };
+
+                            match test_result {
+                                Value::Boolean(test_value) => {
+                                    if test_value {
+                                        match value.clone() {
+                                            // Blocks get evaluated lazily (now)
+                                            Value::Block {
+                                                arity_in,
+                                                arity_out,
+                                                expression,
+                                            } => {
+                                                eval_block(stack, arity_in, expression, arity_out);
+                                            }
+                                            // All literal values just get directly pushed
+                                            _ => {
+                                                stack.push(value.clone());
+                                            }
+                                        }
+
+                                        cond_returned = true;
+                                        break 'cond_loop;
+                                    }
+                                }
+                                _ => panic!("cond test must return a boolean, got {}", test_result),
+                            }
+                        }
+
+                        // If we didn't return from the cond, return the last value
+                        if !cond_returned {
+                            let default = &l.borrow()[l.borrow().len() - 1];
+
+                            match default.clone() {
+                                // Blocks get evaluated lazily (now)
+                                Value::Block {
+                                    arity_in,
+                                    arity_out,
+                                    expression,
+                                } => {
+                                    eval_block(stack, arity_in, expression, arity_out);
+                                }
+                                // All literal values just get directly pushed
+                                _ => {
+                                    stack.push(default.clone());
+                                }
+                            }
+                        }
+                    },
                     // List (vector) implementation
                     "make-list" => {
                         let list = Value::List(Rc::new(RefCell::new(vec![])));
