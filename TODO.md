@@ -1,10 +1,3 @@
-# Compiler todos
-* Type checking
-
-
-* Better command line interface 
-  * Separate flags into different commands
-  * cargo run compile {file}, cargo run compile {file} --run; I dunno
 * Test harness
   * Run and store in/out/err for all examples; move to test cases?
 * Structs
