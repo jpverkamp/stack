@@ -67,6 +67,7 @@ pub enum Value {
         arity_out: usize,
         expression: Box<Expression>,
     },
+    List(Rc<RefCell<Vec<Value>>>),
     Hash(Rc<RefCell<HashMap<String, Value>>>),
     IntHash(Rc<RefCell<HashMap<i64, Value>>>),
 }
@@ -85,6 +86,17 @@ impl Display for Value {
                     arity_out,
                     ..
                 } => format!("{{{}->{}}}", arity_in, arity_out),
+                Value::List(v) => {
+                    format!(
+                        "[{}]",
+                        v.clone()
+                            .borrow()
+                            .iter()
+                            .map(|v| format!("{}", v))
+                            .collect::<Vec<String>>()
+                            .join(", ")
+                    )
+                }
                 Value::Hash(v) => {
                     format!(
                         "Hash<{}>",
@@ -95,7 +107,7 @@ impl Display for Value {
                             .collect::<Vec<String>>()
                             .join(", ")
                     )
-                },
+                }
                 Value::IntHash(v) => {
                     format!(
                         "IntHash<{}>",

@@ -1,0 +1,11 @@
+[ 1 2 3 ] @l
+
+l writeln
+
+l list-pop! writeln
+l writeln
+
+l 5 list-push!
+l writeln
+
+l 1 list-ref writeln

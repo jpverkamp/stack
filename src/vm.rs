@@ -240,11 +240,71 @@ pub fn evaluate(ast: Expression) {
                             }
                         }
                     }
+                    // List (vector) implementation
+                    "make-list" => {
+                        let list = Value::List(Rc::new(RefCell::new(vec![])));
+                        stack.push(list);
+                    }
+                    "list-length" => {
+                        let list = stack.pop().unwrap();
+
+                        match list {
+                            Value::List(l) => {
+                                stack.push(Value::Number(Number::Integer(
+                                    l.clone().borrow().len() as i64,
+                                )));
+                            }
+                            _ => panic!("list-length: expected list, got {}", list),
+                        }
+                    }
+                    "list-push!" => {
+                        let value = stack.pop().unwrap();
+                        let list = stack.pop().unwrap();
+
+                        match list {
+                            Value::List(l) => {
+                                l.clone().borrow_mut().push(value);
+                            }
+                            _ => panic!("list-push!: expected list, got {}", list),
+                        }
+                    }
+                    "list-pop!" => {
+                        let list = stack.pop().unwrap();
+
+                        match list {
+                            Value::List(l) => {
+                                if let Some(value) = l.clone().borrow_mut().pop() {
+                                    stack.push(value);
+                                } else {
+                                    panic!("list-pop!: list is empty");
+                                }
+                            }
+                            _ => panic!("list-pop!: expected list, got {}", list),
+                        }
+                    }
+                    "list-ref" => {
+                        let index = stack.pop().unwrap();
+                        let list = stack.pop().unwrap();
+
+                        match list {
+                            Value::List(l) => match index {
+                                Value::Number(Number::Integer(i)) => {
+                                    if let Some(value) = l.clone().borrow().get(i as usize) {
+                                        stack.push(value.clone());
+                                    } else {
+                                        panic!("list-ref: index out of bounds: {}", i);
+                                    }
+                                }
+                                _ => panic!("list-ref: index must be an integer, got {}", index),
+                            },
+                            _ => panic!("list-ref: expected list, got {}", list),
+                        }
+                    }
                     // Hashmap implementation
                     "make-hash" => {
                         let hash = Value::Hash(Rc::new(RefCell::new(HashMap::new())));
                         stack.push(hash);
-                    },
+                    }
                     "make-int-hash" => {
                         let hash = Value::IntHash(Rc::new(RefCell::new(HashMap::new())));
                         stack.push(hash);
@@ -264,11 +324,13 @@ pub fn evaluate(ast: Expression) {
                                 Value::Number(Number::Integer(v)) => {
                                     stack.push(Value::Boolean(h.clone().borrow().contains_key(&v)));
                                 }
-                                _ => panic!("hash-has?: IntHash key must be an integer, got {}", key),
+                                _ => {
+                                    panic!("hash-has?: IntHash key must be an integer, got {}", key)
+                                }
                             },
                             _ => panic!("hash-has?: hash must be a hash, got {}", hash),
                         }
-                    },
+                    }
                     "hash-get" => {
                         let key = stack.pop().unwrap();
                         let hash = stack.pop().unwrap();
@@ -292,7 +354,9 @@ pub fn evaluate(ast: Expression) {
                                         panic!("hash-get: key not found: {}", v);
                                     }
                                 }
-                                _ => panic!("hash-get: IntHash key must be an integer, got {}", key),
+                                _ => {
+                                    panic!("hash-get: IntHash key must be an integer, got {}", key)
+                                }
                             },
                             _ => panic!("hash-get: hash must be a hash, got {}", hash),
                         }
@@ -316,7 +380,10 @@ pub fn evaluate(ast: Expression) {
                                     h.clone().borrow_mut().insert(v, value);
                                 }
                                 _ => {
-                                    panic!("hash-set!: IntHash key must be an integer, got {}", key);
+                                    panic!(
+                                        "hash-set!: IntHash key must be an integer, got {}",
+                                        key
+                                    );
                                 }
                             },
                             _ => panic!("hash-set!: hash must be a hash, got {}", hash),
@@ -358,10 +425,16 @@ pub fn evaluate(ast: Expression) {
                     expression: Box::new(Expression::Group(children)),
                 });
             }
-            // TODO: Lists shouldn't currently be directly called
-            // TODO: This could be list expressions
-            Expression::List(_) => todo!(),
-            // TODO: Groups evaluate their children one at a time
+            // Lists are parsed into list values
+            Expression::List(children) => {
+                let mut values = vec![];
+                for node in children {
+                    eval(node, stack);
+                    values.push(stack.pop().unwrap());
+                }
+                stack.push(Value::List(Rc::new(RefCell::new(values))));
+            }
+            // Groups are just evaluated in order
             Expression::Group(children) => {
                 for node in children {
                     eval(node, stack);

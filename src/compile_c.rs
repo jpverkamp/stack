@@ -306,6 +306,7 @@ pub fn compile(ast: Expression) -> String {
                     Value::String(v) => ("TAG_STRING", "string", format!("{v:?}")),
                     Value::Boolean(v) => ("TAG_BOOLEAN", "boolean", format!("{v:?}")),
                     Value::Block { .. } => panic!("Blocks should be compiled separately"),
+                    Value::List(_) => unimplemented!(),
                     Value::Hash(_) => unimplemented!(),
                     Value::IntHash(_) => unimplemented!(),
                 };

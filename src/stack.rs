@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use crate::types::Value;
-use std::{collections::HashMap, fmt::Display, rc::Rc, cell::RefCell};
+use std::{cell::RefCell, collections::HashMap, fmt::Display, rc::Rc};
 
 /// A stack in the context of the VM
 ///
@@ -85,7 +85,7 @@ impl Stack {
     }
 
     /// Set a named value on this stack (including the parent)
-    /// 
+    ///
     /// If this stack doesn't have it, check the parent
     /// If it's not found, panic!
     pub fn set_named(&mut self, name: String, value: Value) {
@@ -94,12 +94,16 @@ impl Stack {
         if self.names.contains_key(&name) {
             self.data[self.names[&name]] = value;
         } else if self.parent.is_some() {
-            self.parent.as_ref().unwrap().clone().borrow_mut().set_named(name, value);
+            self.parent
+                .as_ref()
+                .unwrap()
+                .clone()
+                .borrow_mut()
+                .set_named(name, value);
         } else {
             panic!("set_named({}, {}) on {}", name, value, self);
         }
     }
-    
 }
 
 impl Display for Stack {
