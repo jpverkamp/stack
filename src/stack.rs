@@ -10,7 +10,7 @@ use std::{cell::RefCell, collections::HashMap, fmt::Display, rc::Rc};
 #[derive(Debug, Clone, Default)]
 pub struct Stack {
     // The values on the stack
-    data: Vec<Value>,
+    data: Rc<RefCell<Vec<Value>>>,
     // A mapping of names to indices in the data
     names: HashMap<String, usize>,
     // The parent of this stack for name lookups
@@ -34,7 +34,7 @@ impl Stack {
         values.reverse();
 
         Stack {
-            data: values,
+            data: Rc::new(RefCell::new(values)),
             names: HashMap::new(),
             parent: Some(Rc::new(RefCell::new(self.clone()))),
         }
@@ -42,21 +42,21 @@ impl Stack {
 
     /// Pushes a value onto the stack
     pub fn push(&mut self, value: Value) {
-        self.data.push(value);
+        self.data.clone().borrow_mut().push(value);
     }
 
     /// Pops a value off the stack
     ///
     /// TODO: Handle popping a named value
     pub fn pop(&mut self) -> Option<Value> {
-        self.data.pop()
+        self.data.clone().borrow_mut().pop()
     }
 
     /// Assign a new name to the top value on the stack
     ///
     /// A single stack can have multiple names for the same value
     pub fn name(&mut self, name: String) {
-        self.names.insert(name, self.data.len() - 1);
+        self.names.insert(name, self.data.clone().borrow().len() - 1);
     }
 
     /// Assigns a new name to the top N values of the stack (from bottom to top)
@@ -65,7 +65,7 @@ impl Stack {
     pub fn name_many(&mut self, names: Vec<String>) {
         for (i, name) in names.iter().enumerate() {
             self.names
-                .insert(name.clone(), self.data.len() - names.len() + i);
+                .insert(name.clone(), self.data.clone().borrow().len() - names.len() + i);
         }
     }
 
@@ -76,7 +76,7 @@ impl Stack {
         log::debug!("get_named({}) from {}", name, self);
 
         if self.names.contains_key(&name) {
-            Some(self.data[self.names[&name]].clone())
+            Some(self.data.clone().borrow()[self.names[&name]].clone())
         } else if self.parent.is_some() {
             self.parent.as_ref().unwrap().borrow().get_named(name)
         } else {
@@ -92,7 +92,8 @@ impl Stack {
         log::debug!("set_named({}, {}) on {}", name, value, self);
 
         if self.names.contains_key(&name) {
-            self.data[self.names[&name]] = value;
+            self.data.clone().borrow_mut().insert(self.names[&name], value);
+            // self.data[self.names[&name]] = value;
         } else if self.parent.is_some() {
             self.parent
                 .as_ref()
@@ -116,7 +117,7 @@ impl Display for Stack {
         }
 
         s.push('[');
-        for (i, v) in self.data.iter().enumerate() {
+        for (i, v) in self.data.clone().borrow().iter().enumerate() {
             s.push_str(format!("{}", v).as_str());
 
             for (k, v) in self.names.iter() {
@@ -125,7 +126,7 @@ impl Display for Stack {
                 }
             }
 
-            if i != self.data.len() - 1 {
+            if i != self.data.clone().borrow().len() - 1 {
                 s.push(' ');
             }
         }

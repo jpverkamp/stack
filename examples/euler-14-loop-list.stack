@@ -46,18 +46,19 @@ cache 1 1 list-set!
 } @collatz-length
 
 # Store best value so far
-[1 1] @best
+1 @best-v
+1 @best-l
 
 # Check each value under 1 million
 {
-  @v
+  @v !0
   v 1 + !v
   v collatz-length @l
 
   {
     @0 !0
-    best 0 v list-set!
-    best 1 l list-set!
+    v !best-v
+    l !best-l
 
     "new best: " write
     v write
@@ -65,7 +66,7 @@ cache 1 1 list-set!
     l writeln
   } 
   { @0 !0 }
-  l best 1 list-ref > if
+  l best-l > if
 } bound loop
 
-best 0 list-ref writeln
+best-v writeln

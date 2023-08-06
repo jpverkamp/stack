@@ -31,20 +31,19 @@ cache 1 1 hash-set!
 } @collatz-length
 
 # Store best value so far
-make-hash @results
-results "best-v" 1 hash-set!
-results "best-l" 1 hash-set!
+1 @best-v
+1 @best-l
 
 # Check each value under 1 million
 {
-  @v
+  @v !0
   v 1 + !v
   v collatz-length @l
 
   {
     @0 !0
-    results "best-v" v hash-set!
-    results "best-l" l hash-set!
+    v !best-v
+    l !best-l
 
     "new best: " write
     v write
@@ -52,7 +51,7 @@ results "best-l" 1 hash-set!
     l writeln
   } 
   { @0 !0 }
-  l results "best-l" hash-get > if
+  l best-l > if
 } bound loop
 
-results "best-v" hash-get writeln
+best-v writeln
