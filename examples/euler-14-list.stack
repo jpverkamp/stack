@@ -3,13 +3,9 @@
 
 1000000 @bound
 
-{ @n !1 0 } bound 2 * loop->list @cache
-cache 0 1 list-set!
-cache 1 1 list-set!
-
-# make-list @cache
-# cache 1 list-push! 
-# cache 1 list-push! 
+make-list @cache
+cache 1 list-push! 
+cache 1 list-push! 
 
 {
   @n
@@ -22,6 +18,7 @@ cache 1 1 list-set!
       @0 !0
       cache 0 list-push! 
     } extension loop 
+    "extended cache by " write extension write " to " write n writeln
   }
   { @0 !0 }
   extension 0 > if
