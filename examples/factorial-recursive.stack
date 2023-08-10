@@ -1,8 +1,0 @@
-{
-  @[n fact]
-  { 1 }
-  { n 1 - fact n * }
-  n 1 < if
-} @fact
-
-5 fact.recur writeln

@@ -19,10 +19,10 @@
 } @cwrite
 
 "multiply:" writeln
-3 -2 4 5 cmul cwrite newline
-22 7 cwrite newline
+"actual: " write 3 -2 4 5 cmul cwrite newline
+"expect: " write 22 7 cwrite newline
 newline
 
 "add:" writeln
-3 -2 4 5 cadd cwrite newline
-7 3 cwrite newline
+"actual: " write 3 -2 4 5 cadd cwrite newline
+"expect: " write 7 3 cwrite newline

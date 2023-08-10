@@ -56,7 +56,8 @@ impl Stack {
     ///
     /// A single stack can have multiple names for the same value
     pub fn name(&mut self, name: String) {
-        self.names.insert(name, self.data.clone().borrow().len() - 1);
+        self.names
+            .insert(name, self.data.clone().borrow().len() - 1);
     }
 
     /// Assigns a new name to the top N values of the stack (from bottom to top)
@@ -64,8 +65,10 @@ impl Stack {
     /// If the stack is [8, 6, 7, 5], name_many("A", "B") would result in [8, 6, 7@A, 5@B]
     pub fn name_many(&mut self, names: Vec<String>) {
         for (i, name) in names.iter().enumerate() {
-            self.names
-                .insert(name.clone(), self.data.clone().borrow().len() - names.len() + i);
+            self.names.insert(
+                name.clone(),
+                self.data.clone().borrow().len() - names.len() + i,
+            );
         }
     }
 
@@ -92,7 +95,10 @@ impl Stack {
         log::debug!("set_named({}, {}) on {}", name, value, self);
 
         if self.names.contains_key(&name) {
-            self.data.clone().borrow_mut().insert(self.names[&name], value);
+            self.data
+                .clone()
+                .borrow_mut()
+                .insert(self.names[&name], value);
             // self.data[self.names[&name]] = value;
         } else if self.parent.is_some() {
             self.parent

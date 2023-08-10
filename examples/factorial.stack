@@ -5,4 +5,4 @@
   n 1 < if
 } @fact
 
-5 fact writeln
+10 fact writeln

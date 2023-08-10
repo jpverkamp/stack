@@ -14,6 +14,8 @@ mod lexer;
 mod parser;
 mod vm;
 
+mod example_tests;
+
 // The top-level application
 #[derive(Parser, Debug)]
 #[clap(name = "stacklang", version = "0.1.0", author = "JP Verkamp")]

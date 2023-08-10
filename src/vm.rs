@@ -334,7 +334,7 @@ pub fn evaluate(ast: Expression) {
                                 } => {
                                     eval_block(stack, arity_in, expression, arity_out);
                                     stack.pop().unwrap()
-                                }                                
+                                }
                                 _ => panic!("cond test must be a block, got {}", test),
                             };
 
@@ -383,7 +383,7 @@ pub fn evaluate(ast: Expression) {
                                 }
                             }
                         }
-                    },
+                    }
                     // List (vector) implementation
                     "make-list" => {
                         let list = Value::Stack(Rc::new(RefCell::new(vec![])));
@@ -452,7 +452,9 @@ pub fn evaluate(ast: Expression) {
                         match list {
                             Value::Stack(l) => match index {
                                 Value::Number(Number::Integer(i)) => {
-                                    if let Some(old_value) = l.clone().borrow_mut().get_mut(i as usize) {
+                                    if let Some(old_value) =
+                                        l.clone().borrow_mut().get_mut(i as usize)
+                                    {
                                         *old_value = value.clone();
                                     } else {
                                         panic!("stack-set!: index out of bounds: {}", i);
