@@ -1,0 +1,20 @@
+[
+    [ 1 2 3 ]
+    [ 4 5 ]
+    [ 7 8 9 0 ]
+] @l
+
+l writeln
+
+"---" writeln 
+
+"[4, 5]: " write 
+l 1 stack-ref writeln
+
+"9: " write 
+l 2 stack-ref 2 stack-ref writeln
+
+"---" writeln 
+
+l [ "a" "b" "c" ] stack-push!
+l writeln
