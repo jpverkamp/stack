@@ -4,19 +4,19 @@
 1000000 @bound
 
 make-list @cache
-cache 1 list-push! 
-cache 1 list-push! 
+cache 1 stack-push! 
+cache 1 stack-push! 
 
 {
   @n
 
   # Extend the cache if needed
-  n cache list-length - 2 + @extension
+  n cache stack-size - 2 + @extension
   { 
     @0 !0
     { 
       @0 !0
-      cache 0 list-push! 
+      cache 0 stack-push! 
     } extension loop 
     "extended cache by " write extension write " to " write n writeln
   }
@@ -25,7 +25,7 @@ cache 1 list-push!
 
   [
     # Already cached
-    { @0 !1 cache n list-ref 0 > } { @0 !1 cache n list-ref }
+    { @0 !1 cache n stack-ref 0 > } { @0 !1 cache n stack-ref }
 
     # Base case
     { @0 !1 n 1 <= } 1
@@ -38,7 +38,7 @@ cache 1 list-push!
   ] cond
   @l
 
-  cache n l list-set!
+  cache n l stack-set!
   l
 } @collatz-length
 

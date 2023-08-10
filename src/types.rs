@@ -67,7 +67,7 @@ pub enum Value {
         arity_out: usize,
         expression: Box<Expression>,
     },
-    List(Rc<RefCell<Vec<Value>>>),
+    Stack(Rc<RefCell<Vec<Value>>>),
     Hash(Rc<RefCell<HashMap<String, Value>>>),
     IntHash(Rc<RefCell<HashMap<i64, Value>>>),
 }
@@ -86,7 +86,7 @@ impl Display for Value {
                     arity_out,
                     ..
                 } => format!("{{{}->{}}}", arity_in, arity_out),
-                Value::List(v) => {
+                Value::Stack(v) => {
                     format!(
                         "[{}]",
                         v.clone()

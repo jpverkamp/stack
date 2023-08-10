@@ -2,10 +2,10 @@
 
 l writeln
 
-l list-pop! writeln
+l stack-pop! writeln
 l writeln
 
-l 5 list-push!
+l 5 stack-push!
 l writeln
 
-l 1 list-ref writeln
+l 1 stack-ref writeln

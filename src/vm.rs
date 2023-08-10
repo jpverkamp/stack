@@ -196,7 +196,7 @@ pub fn evaluate(ast: Expression) {
                                     }
                                 }
                             },
-                            Value::List(l) => {
+                            Value::Stack(l) => {
                                 for value in l.clone().borrow().iter() {
                                     stack.push(value.clone());
                                     match block.clone() {
@@ -247,7 +247,7 @@ pub fn evaluate(ast: Expression) {
                                     }
                                 }
                             },
-                            Value::List(l) => {
+                            Value::Stack(l) => {
                                 for value in l.clone().borrow().iter() {
                                     stack.push(value.clone());
                                     match block.clone() {
@@ -262,7 +262,7 @@ pub fn evaluate(ast: Expression) {
                             _ => panic!("loop must have an iterable (currently an integer or string), got {}", iterable),
                         };
 
-                        stack.push(Value::List(Rc::new(RefCell::new(result))));
+                        stack.push(Value::Stack(Rc::new(RefCell::new(result))));
                     }
                     // If statement, expects two blocks or literals and a conditional (must be boolean)
                     "if" => {
@@ -315,7 +315,7 @@ pub fn evaluate(ast: Expression) {
                         let branches = stack.pop().unwrap();
 
                         let l = match branches {
-                            Value::List(l) => l.clone(),
+                            Value::Stack(l) => l.clone(),
                             _ => panic!("cond branches must be a list, got {}", branches),
                         };
 
@@ -386,81 +386,81 @@ pub fn evaluate(ast: Expression) {
                     },
                     // List (vector) implementation
                     "make-list" => {
-                        let list = Value::List(Rc::new(RefCell::new(vec![])));
+                        let list = Value::Stack(Rc::new(RefCell::new(vec![])));
                         stack.push(list);
                     }
-                    "list-length" => {
+                    "stack-size" => {
                         let list = stack.pop().unwrap();
 
                         match list {
-                            Value::List(l) => {
+                            Value::Stack(l) => {
                                 stack.push(Value::Number(Number::Integer(
                                     l.clone().borrow().len() as i64,
                                 )));
                             }
-                            _ => panic!("list-length: expected list, got {}", list),
+                            _ => panic!("stack-size: expected list, got {}", list),
                         }
                     }
-                    "list-push!" => {
+                    "stack-push!" => {
                         let value = stack.pop().unwrap();
                         let list = stack.pop().unwrap();
 
                         match list {
-                            Value::List(l) => {
+                            Value::Stack(l) => {
                                 l.clone().borrow_mut().push(value);
                             }
-                            _ => panic!("list-push!: expected list, got {}", list),
+                            _ => panic!("stack-push!: expected list, got {}", list),
                         }
                     }
-                    "list-pop!" => {
+                    "stack-pop!" => {
                         let list = stack.pop().unwrap();
 
                         match list {
-                            Value::List(l) => {
+                            Value::Stack(l) => {
                                 if let Some(value) = l.clone().borrow_mut().pop() {
                                     stack.push(value);
                                 } else {
-                                    panic!("list-pop!: list is empty");
+                                    panic!("stack-pop!: list is empty");
                                 }
                             }
-                            _ => panic!("list-pop!: expected list, got {}", list),
+                            _ => panic!("stack-pop!: expected list, got {}", list),
                         }
                     }
-                    "list-ref" => {
+                    "stack-ref" => {
                         let index = stack.pop().unwrap();
                         let list = stack.pop().unwrap();
 
                         match list {
-                            Value::List(l) => match index {
+                            Value::Stack(l) => match index {
                                 Value::Number(Number::Integer(i)) => {
                                     if let Some(value) = l.clone().borrow().get(i as usize) {
                                         stack.push(value.clone());
                                     } else {
-                                        panic!("list-ref: index out of bounds: {}", i);
+                                        panic!("stack-ref: index out of bounds: {}", i);
                                     }
                                 }
-                                _ => panic!("list-ref: index must be an integer, got {}", index),
+                                _ => panic!("stack-ref: index must be an integer, got {}", index),
                             },
-                            _ => panic!("list-ref: expected list, got {}", list),
+                            _ => panic!("stack-ref: expected list, got {}", list),
                         }
                     }
-                    "list-set!" => {
+                    "stack-set!" => {
                         let value = stack.pop().unwrap();
                         let index = stack.pop().unwrap();
                         let list = stack.pop().unwrap();
 
                         match list {
-                            Value::List(l) => match index {
+                            Value::Stack(l) => match index {
                                 Value::Number(Number::Integer(i)) => {
                                     if let Some(old_value) = l.clone().borrow_mut().get_mut(i as usize) {
                                         *old_value = value.clone();
                                     } else {
-                                        panic!("list-set!: index out of bounds: {}", i);
+                                        panic!("stack-set!: index out of bounds: {}", i);
                                     }
                                 }
-                                _ => panic!("list-set!: index must be an integer, got {}", index),
+                                _ => panic!("stack-set!: index must be an integer, got {}", index),
                             },
-                            _ => panic!("list-set!: expected list, got {}", list),
+                            _ => panic!("stack-set!: expected list, got {}", list),
                         }
                     }
                     // Hashmap implementation
@@ -588,14 +588,14 @@ pub fn evaluate(ast: Expression) {
                     expression: Box::new(Expression::Group(children)),
                 });
             }
-            // Lists are parsed into list values
+            // Lists are parsed into a stack
             Expression::List(children) => {
                 let mut values = vec![];
                 for node in children {
                     eval(node, stack);
                     values.push(stack.pop().unwrap());
                 }
-                stack.push(Value::List(Rc::new(RefCell::new(values))));
+                stack.push(Value::Stack(Rc::new(RefCell::new(values))));
             }
             // Groups are just evaluated in order
             Expression::Group(children) => {
