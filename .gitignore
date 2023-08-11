@@ -2,3 +2,7 @@
 /output
 *.ppm
 .DS_Store
+
+# Compiled files in example, don't include anything but *.stack
+/examples/*
+!/examples/*.stack
