@@ -86,7 +86,11 @@ fn collect_names(ast: &Expression) -> HashMap<String, usize> {
             | Expression::Dollar(_) => {
                 // Do nothing, no names possible
             }
-            Expression::List(_) => todo!(),
+            Expression::List(values) => {
+                for value in values {
+                    collect_names_expr(value, names);
+                }
+            },
             Expression::Block(exprs) => {
                 for expr in exprs {
                     collect_names_expr(expr, names);
@@ -142,34 +146,27 @@ pub fn compile(ast: Expression) -> String {
     let names = collect_names(&ast);
     log::debug!("collected names: {:?}", names);
 
+    // Define names as constants
     for (name, index) in names.iter() {
         lines.push(format!("#define NAME_{name} {index}"));
     }
 
-    unsafe {
-        if debug::ENABLED {
-            lines.push("char* get_name(int index) {".to_string());
-            for (name, index) in names.iter() {
-                lines.push(format!(
-                    "    if (index == {index}) {{ return \"{name}\"; }}"
-                ));
-            }
-            lines.push("    return \"<unknown>\";".to_string());
-            lines.push("}".to_string());
-        }
+    // Write get_name function with the names hard coded
+    lines.push("char* get_name(int index) {".to_string());
+    for (name, index) in names.iter() {
+        lines.push(format!(
+            "    if (index == {index}) {{ return \"{name}\"; }}"
+        ));
     }
+    lines.push("    return \"<unknown>\";".to_string());
+    lines.push("}".to_string());
 
     lines.push(include_str!("../compile_c_includes/types.c").to_string());
     lines.push(include_str!("../compile_c_includes/globals.c").to_string());
     lines.push(include_str!("../compile_c_includes/coerce.c").to_string());
     lines.push(include_str!("../compile_c_includes/names.c").to_string());
-
-    unsafe {
-        if debug::ENABLED {
-            lines.push(include_str!("../compile_c_includes/stack_dump.c").to_string());
-            // DEBUG
-        }
-    }
+    lines.push(include_str!("../compile_c_includes/stack_dump.c").to_string());
+    lines.push(include_str!("../compile_c_includes/errors.c").to_string());
 
     /// Helper function to compile a specific block to be output later
     fn compile_block(
@@ -267,6 +264,24 @@ pub fn compile(ast: Expression) -> String {
                     ),
                     "to_int" => lines
                         .push(include_str!("../compile_c_includes/builtins/to_int.c").to_string()),
+                    "make-stack" => {
+                        lines.push(include_str!("../compile_c_includes/builtins/stack-new.c").to_string())
+                    },
+                    "stack-ref" => {
+                        lines.push(include_str!("../compile_c_includes/builtins/stack-ref.c").to_string())
+                    },
+                    "stack-set!" => {
+                        lines.push(include_str!("../compile_c_includes/builtins/stack-set.c").to_string())
+                    },
+                    "stack-push!" => {
+                        lines.push(include_str!("../compile_c_includes/builtins/stack-push.c").to_string())
+                    },
+                    "stack-pop!" => {
+                        lines.push(include_str!("../compile_c_includes/builtins/stack-pop.c").to_string())
+                    },
+                    "stack-size" => {
+                        lines.push(include_str!("../compile_c_includes/builtins/stack-size.c").to_string())
+                    },
 
                     // Attempt to lookup in names table
                     id => {
@@ -333,7 +348,18 @@ pub fn compile(ast: Expression) -> String {
 "
                 ));
             }
-            Expression::List(_) => todo!(),
+            Expression::List(values) => {
+                lines.push("\t{{".to_string());
+                lines.push("\t\tValue v = {.type=TAG_STACK, .as_stack=vs_init()};".to_string());
+                for value in values {
+                    for line in compile_expr(value.clone(), blocks) {
+                        lines.push(line);
+                    }
+                    lines.push(format!("\t\tvs_push(v.as_stack, *(stack_ptr--)); // Push {}", value).to_string());
+                }
+                lines.push("\t\t*(++stack_ptr) = v;".to_string());
+                lines.push("\n\t}}".to_string());
+            }
             Expression::Group(exprs) => {
                 for expr in exprs {
                     for line in compile_expr(expr, blocks) {
