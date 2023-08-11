@@ -232,7 +232,10 @@ pub fn compile(ast: Expression) -> String {
                     "-" => numeric_binop!(lines, "-"),
                     "*" => numeric_binop!(lines, "*"),
                     "/" => numeric_binop!(lines, "/"),
-                    "%" => numeric_binop!(lines, "%"),
+
+                    // % only allows integers
+                    "%" => lines
+                        .push(include_str!("../compile_c_includes/builtins/mod.c").to_string()),
 
                     // Built in numeric comparisons
                     "<" => numeric_compare!(lines, "<"),
@@ -459,7 +462,7 @@ pub fn compile(ast: Expression) -> String {
 
         unsafe {
             if debug::ENABLED {
-                lines.push(format!("    printf(\"[DEBUG] block_{i} called --\");").to_string()); // DEBUG
+                lines.push(format!("    fprintf(stderr, \"[DEBUG] block_{i} called --\");").to_string()); // DEBUG
                 lines.push(format!("    stack_dump(names);\n")); // DEBUG
             }
         }
@@ -468,7 +471,7 @@ pub fn compile(ast: Expression) -> String {
 
         unsafe {
             if debug::ENABLED {
-                lines.push(format!("    printf(\"[DEBUG] block_{i} return --\");").to_string()); // DEBUG
+                lines.push(format!("    fprintf(stderr, \"[DEBUG] block_{i} return --\");").to_string()); // DEBUG
                 lines.push(format!("    stack_dump(names);\n")); // DEBUG
             }
         }

@@ -1,23 +1,60 @@
 {
-    Value cond = *(stack_ptr--);
-    Value if_false = *(stack_ptr--);
-    Value if_true = *(stack_ptr--);
+    Value *c = stack_ptr--;
 
-    if (cond.type != TAG_BOOLEAN)
+    assert_type("cond", "stack", TAG_STACK, c, names);
+
+    ValueStack *cases = c->as_stack;
+
+    if (cases->size % 2 != 1)
     {
-        fprintf(stderr, "Error: if condition must be a boolean\n");
+        printf("cond: expected odd number of arguments, got %zu\n", cases->size);
         exit(1);
     }
 
-    Value v = (cond.as_boolean ? if_true : if_false);
+    bool found = false;
+    for (int i = 0; i < cases->size; i += 2)
+    {
+        Value *test = vs_get(cases, i);
+        Value *body = vs_get(cases, i + 1);
 
-    if (v.type == TAG_BLOCK)
-    {
-        void *f = v.as_block;
+        assert_type("cond (test block)", "block", TAG_BLOCK, test, names);
+
+        void *f = test->as_block;
         ((void (*)(Name *))f)(names);
+
+        Value *test_result = stack_ptr--;
+
+        assert_type("cond (test result)", "boolean", TAG_BOOLEAN, test_result, names);
+
+        if (test_result->as_boolean)
+        {
+            if (body->type == TAG_BLOCK)
+            {
+                void *f = body->as_block;
+                ((void (*)(Name *))f)(names);
+            }
+            else
+            {
+                *(stack_ptr++) = *body;
+            }
+
+            found = true;
+            break;
+        }
     }
-    else
+
+    if (!found)
     {
-        *(++stack_ptr) = v;
+        Value *body = vs_get(cases, cases->size - 1);
+
+        if (body->type == TAG_BLOCK)
+        {
+            void *f = body->as_block;
+            ((void (*)(Name *))f)(names);
+        }
+        else
+        {
+            *(stack_ptr++) = *body;
+        }
     }
 }

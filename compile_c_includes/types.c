@@ -86,7 +86,7 @@ void vs_push(ValueStack *stack, Value val)
 }
 
 // Pop and return a  value from the stack
-Value vs_pop(ValueStack *stack)
+Value *vs_pop(ValueStack *stack)
 {
     if (stack->size == 0)
     {
@@ -94,11 +94,11 @@ Value vs_pop(ValueStack *stack)
         exit(1);
     }
 
-    return stack->values[--stack->size];
+    return &stack->values[--stack->size];
 }
 
 // Get a value from the stack by index without removing it
-Value vs_get(ValueStack *stack, size_t index)
+Value *vs_get(ValueStack *stack, size_t index)
 {
     if (index >= stack->size)
     {
@@ -106,7 +106,7 @@ Value vs_get(ValueStack *stack, size_t index)
         exit(1);
     }
 
-    return stack->values[index];
+    return &stack->values[index];
 }
 
 // Set a value in the stack at a given index
