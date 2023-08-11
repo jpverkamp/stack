@@ -90,7 +90,7 @@ fn collect_names(ast: &Expression) -> HashMap<String, usize> {
                 for value in values {
                     collect_names_expr(value, names);
                 }
-            },
+            }
             Expression::Block(exprs) => {
                 for expr in exprs {
                     collect_names_expr(expr, names);
@@ -259,29 +259,31 @@ pub fn compile(ast: Expression) -> String {
                     "if" => {
                         lines.push(include_str!("../compile_c_includes/builtins/if.c").to_string())
                     }
+                    "cond" => lines
+                        .push(include_str!("../compile_c_includes/builtins/cond.c").to_string()),
                     "to_float" => lines.push(
                         include_str!("../compile_c_includes/builtins/to_float.c").to_string(),
                     ),
                     "to_int" => lines
                         .push(include_str!("../compile_c_includes/builtins/to_int.c").to_string()),
-                    "make-stack" => {
-                        lines.push(include_str!("../compile_c_includes/builtins/stack-new.c").to_string())
-                    },
-                    "stack-ref" => {
-                        lines.push(include_str!("../compile_c_includes/builtins/stack-ref.c").to_string())
-                    },
-                    "stack-set!" => {
-                        lines.push(include_str!("../compile_c_includes/builtins/stack-set.c").to_string())
-                    },
-                    "stack-push!" => {
-                        lines.push(include_str!("../compile_c_includes/builtins/stack-push.c").to_string())
-                    },
-                    "stack-pop!" => {
-                        lines.push(include_str!("../compile_c_includes/builtins/stack-pop.c").to_string())
-                    },
-                    "stack-size" => {
-                        lines.push(include_str!("../compile_c_includes/builtins/stack-size.c").to_string())
-                    },
+                    "make-stack" => lines.push(
+                        include_str!("../compile_c_includes/builtins/stack-new.c").to_string(),
+                    ),
+                    "stack-ref" => lines.push(
+                        include_str!("../compile_c_includes/builtins/stack-ref.c").to_string(),
+                    ),
+                    "stack-set!" => lines.push(
+                        include_str!("../compile_c_includes/builtins/stack-set.c").to_string(),
+                    ),
+                    "stack-push!" => lines.push(
+                        include_str!("../compile_c_includes/builtins/stack-push.c").to_string(),
+                    ),
+                    "stack-pop!" => lines.push(
+                        include_str!("../compile_c_includes/builtins/stack-pop.c").to_string(),
+                    ),
+                    "stack-size" => lines.push(
+                        include_str!("../compile_c_includes/builtins/stack-size.c").to_string(),
+                    ),
 
                     // Attempt to lookup in names table
                     id => {
@@ -355,7 +357,10 @@ pub fn compile(ast: Expression) -> String {
                     for line in compile_expr(value.clone(), blocks) {
                         lines.push(line);
                     }
-                    lines.push(format!("\t\tvs_push(v.as_stack, *(stack_ptr--)); // Push {}", value).to_string());
+                    lines.push(
+                        format!("\t\tvs_push(v.as_stack, *(stack_ptr--)); // Push {}", value)
+                            .to_string(),
+                    );
                 }
                 lines.push("\t\t*(++stack_ptr) = v;".to_string());
                 lines.push("\n\t}}".to_string());

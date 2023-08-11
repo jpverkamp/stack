@@ -13,7 +13,11 @@ mod test {
             .expect("failed to run vm");
 
         assert_eq!(vm_output.status.success(), true, "vm exit code");
-        assert_eq!(str::from_utf8(&vm_output.stdout).unwrap(), target, "vm output");
+        assert_eq!(
+            str::from_utf8(&vm_output.stdout).unwrap(),
+            target,
+            "vm output"
+        );
 
         let compile_output = Command::new("cargo")
             .arg("run")
@@ -26,9 +30,16 @@ mod test {
             .output()
             .expect("failed to execute process");
 
-        assert_eq!(compile_output.status.success(), true, "c compiler exit code");
-        assert_eq!(str::from_utf8(&compile_output.stdout).unwrap(), target, "c compiler output");
-
+        assert_eq!(
+            compile_output.status.success(),
+            true,
+            "c compiler exit code"
+        );
+        assert_eq!(
+            str::from_utf8(&compile_output.stdout).unwrap(),
+            target,
+            "c compiler output"
+        );
     }
 
     #[test]
@@ -91,27 +102,36 @@ expect: 7+3i
     fn test_if() {
         test("examples/if.stack", "hello\ngoodbye\nhello\ngoodbye\n");
     }
-    
+
     #[test]
     fn test_list() {
-        test("examples/list.stack", "[1, 2, 3]\n3\n[1, 2]\n[1, 2, 5]\n2\n");
+        test(
+            "examples/list.stack",
+            "[1, 2, 3]\n3\n[1, 2]\n[1, 2, 5]\n2\n",
+        );
     }
-    
+
     #[test]
     fn test_lists_of_lists() {
-        test("examples/lists-of-lists.stack", "\
+        test(
+            "examples/lists-of-lists.stack",
+            "\
 [[1, 2, 3], [4, 5], [7, 8, 9, 0]]
 ---
 [4, 5]: [4, 5]
 9: 9
 ---
 [[1, 2, 3], [4, 5], [7, 8, 9, 0], [a, b, c]]
-");
+",
+        );
     }
 
     #[test]
     fn test_loop_list() {
-        test("examples/loop-list.stack", "[0, 2, 4, 6, 8, 10, 12, 14, 16, 18]\n");
+        test(
+            "examples/loop-list.stack",
+            "[0, 2, 4, 6, 8, 10, 12, 14, 16, 18]\n",
+        );
     }
 
     #[test]
