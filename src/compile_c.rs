@@ -356,17 +356,17 @@ pub fn compile(ast: Expression) -> String {
             }
             Expression::List(values) => {
                 lines.push("\t{{".to_string());
-                lines.push("\t\tValue v = {.type=TAG_STACK, .as_stack=vs_init()};".to_string());
+                lines.push("\t\tValue s = {.type=TAG_STACK, .as_stack=vs_init()};".to_string());
                 for value in values {
                     for line in compile_expr(value.clone(), blocks) {
                         lines.push(line);
                     }
                     lines.push(
-                        format!("\t\tvs_push(v.as_stack, *(stack_ptr--)); // Push {}", value)
+                        format!("\t\tvs_push(s.as_stack, *(stack_ptr--)); // Push {}", value)
                             .to_string(),
                     );
                 }
-                lines.push("\t\t*(++stack_ptr) = v;".to_string());
+                lines.push("\t\t*(++stack_ptr) = s;".to_string());
                 lines.push("\n\t}}".to_string());
             }
             Expression::Group(exprs) => {
