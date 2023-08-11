@@ -12,7 +12,7 @@
     }
 
     bool found = false;
-    for (int i = 0; i < cases->size; i += 2)
+    for (int i = 0; i < cases->size - 1; i += 2)
     {
         Value *test = vs_get(cases, i);
         Value *body = vs_get(cases, i + 1);
@@ -35,7 +35,7 @@
             }
             else
             {
-                *(stack_ptr++) = *body;
+                *(++stack_ptr) = *body;
             }
 
             found = true;
@@ -45,16 +45,16 @@
 
     if (!found)
     {
-        Value *body = vs_get(cases, cases->size - 1);
+        Value *default_body = vs_get(cases, cases->size - 1);
 
-        if (body->type == TAG_BLOCK)
+        if (default_body->type == TAG_BLOCK)
         {
-            void *f = body->as_block;
+            void *f = default_body->as_block;
             ((void (*)(Name *))f)(names);
         }
         else
         {
-            *(stack_ptr++) = *body;
+            *(++stack_ptr) = *default_body;
         }
     }
 }
