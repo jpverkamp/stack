@@ -7,5 +7,5 @@
 
     ValueStack *stack = s->as_stack;
     Value *v = vs_get(stack, i->as_integer);
-    ++stack_ptr = v;
+    *(++stack_ptr) = *v;
 }
