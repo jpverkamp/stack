@@ -417,6 +417,7 @@ pub fn compile(ast: Expression) -> String {
                 match v.as_ref() {
                     Expression::Literal(Value::Number(Number::Integer(_))) => {} // Used only for arity out expressions
                     Expression::Identifier(id) => {
+                        let id = sanitize_name(id);
                         lines.push(format!(
                             "
     {{ 
