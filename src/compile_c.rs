@@ -234,8 +234,9 @@ pub fn compile(ast: Expression) -> String {
                     "/" => numeric_binop!(lines, "/"),
 
                     // % only allows integers
-                    "%" => lines
-                        .push(include_str!("../compile_c_includes/builtins/mod.c").to_string()),
+                    "%" => {
+                        lines.push(include_str!("../compile_c_includes/builtins/mod.c").to_string())
+                    }
 
                     // Built in numeric comparisons
                     "<" => numeric_compare!(lines, "<"),
@@ -294,7 +295,7 @@ pub fn compile(ast: Expression) -> String {
                         lines.push(format!(
                             "
     {{
-        Value* v = lookup(names, NAME_{id});
+        Value* v = names_lookup(names, NAME_{id});
         if (v->type == TAG_BLOCK) {{
             void *f = v->as_block;
             ((void (*)(Name*))f)(names);
@@ -383,7 +384,7 @@ pub fn compile(ast: Expression) -> String {
                             "
     {{
         Value *p = stack_ptr;
-        names = bind(names, NAME_{id}, p);
+        names = names_bind(names, NAME_{id}, p);
     }}
 "
                         ));
@@ -399,7 +400,7 @@ pub fn compile(ast: Expression) -> String {
                                         "
     {{ 
         Value *p = (stack_ptr - {id_count} + {i} + 1);
-        names = bind(names, NAME_{id}, p);
+        names = names_bind(names, NAME_{id}, p);
     }}
 "
                                     ));
@@ -412,10 +413,20 @@ pub fn compile(ast: Expression) -> String {
                     _ => panic!("Unexpected @ expression when compiling: {}", expr),
                 }
             }
-            Expression::Bang(v) => {
+            Expression::Bang(ref v) => {
                 match v.as_ref() {
                     Expression::Literal(Value::Number(Number::Integer(_))) => {} // Used only for arity out expressions
-                    _ => todo!(),
+                    Expression::Identifier(id) => {
+                        lines.push(format!(
+                            "
+    {{ 
+        Value *v = stack_ptr--;
+        names_update(names, NAME_{id}, v);
+    }}
+"
+                        ));
+                    }
+                    _ => panic!("Unexpected ! expression when compiling: {}", expr),
                 }
             }
             Expression::Dollar(expr) => match expr.as_ref() {
@@ -423,7 +434,7 @@ pub fn compile(ast: Expression) -> String {
                     lines.push(format!(
                         "
     {{
-        Value* v = lookup(names, NAME_{id});
+        Value* v = names_lookup(names, NAME_{id});
         *(++stack_ptr) = *v;
     }}
         "
@@ -462,7 +473,9 @@ pub fn compile(ast: Expression) -> String {
 
         unsafe {
             if debug::ENABLED {
-                lines.push(format!("    fprintf(stderr, \"[DEBUG] block_{i} called --\");").to_string()); // DEBUG
+                lines.push(
+                    format!("    fprintf(stderr, \"[DEBUG] block_{i} called --\");").to_string(),
+                ); // DEBUG
                 lines.push(format!("    stack_dump(names);\n")); // DEBUG
             }
         }
@@ -471,7 +484,9 @@ pub fn compile(ast: Expression) -> String {
 
         unsafe {
             if debug::ENABLED {
-                lines.push(format!("    fprintf(stderr, \"[DEBUG] block_{i} return --\");").to_string()); // DEBUG
+                lines.push(
+                    format!("    fprintf(stderr, \"[DEBUG] block_{i} return --\");").to_string(),
+                ); // DEBUG
                 lines.push(format!("    stack_dump(names);\n")); // DEBUG
             }
         }

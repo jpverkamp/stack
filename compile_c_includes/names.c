@@ -8,7 +8,7 @@ struct Name
     Name *prev;
 };
 
-Name *bind(Name *names, uint8_t name, Value *value)
+Name *names_bind(Name *names, uint8_t name, Value *value)
 {
     Name *new_name = malloc(sizeof(Name));
     if (new_name == NULL)
@@ -25,7 +25,7 @@ Name *bind(Name *names, uint8_t name, Value *value)
 }
 
 // Lookup a value on the stack by name
-Value *lookup(Name *names, uint8_t name)
+Value *names_lookup(Name *names, uint8_t name)
 {
     while (names != NULL)
     {
@@ -36,6 +36,23 @@ Value *lookup(Name *names, uint8_t name)
         names = names->prev;
     }
 
-    fprintf(stderr, "Name not found: %d", name);
+    fprintf(stderr, "Error in names_lookup(); name not found: %d", name);
+    exit(1);
+}
+
+// Update a value on the stack by name
+void names_update(Name *names, uint8_t name, Value *value)
+{
+    while (names != NULL)
+    {
+        if (names->name == name)
+        {
+            names->value = value;
+            return;
+        }
+        names = names->prev;
+    }
+
+    fprintf(stderr, "Error in names_update(); name not found: %d", name);
     exit(1);
 }
