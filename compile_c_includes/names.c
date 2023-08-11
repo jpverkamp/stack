@@ -47,7 +47,7 @@ void names_update(Name *names, uint8_t name, Value *value)
     {
         if (names->name == name)
         {
-            names->value = value;
+            *names->value = *value;
             return;
         }
         names = names->prev;
