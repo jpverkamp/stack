@@ -6,6 +6,7 @@ use crate::arity::calculate_arity;
 use crate::numbers::Number;
 use crate::stack::Stack;
 use crate::types::{Expression, Value};
+use crate::globals::GLOBALS;
 
 /// Evaluates a vector of expressions
 /// This does not actually return anything, but instead mutates the stack
@@ -89,286 +90,211 @@ pub fn evaluate(ast: Expression) {
             // Identifiers are globals are named expressions
             // TODO: Extract globals into their own module
             Expression::Identifier(id) => {
-                match id.as_str() {
-                    // Built in numeric functions
-                    "+" => numeric_binop!(stack, |a, b| { a + b }),
-                    "-" => numeric_binop!(stack, |a, b| { a - b }),
-                    "*" => numeric_binop!(stack, |a, b| { a * b }),
-                    "/" => numeric_binop!(stack, |a, b| { a / b }),
-                    "%" => numeric_binop!(stack, |a, b| { a % b }),
-                    // Built in comparisons
-                    "<" => comparison_binop!(stack, |a, b| { a < b }),
-                    "<=" => comparison_binop!(stack, |a, b| { a <= b }),
-                    "=" => comparison_binop!(stack, |a, b| { a == b }),
-                    ">=" => comparison_binop!(stack, |a, b| { a >= b }),
-                    ">" => comparison_binop!(stack, |a, b| { a > b }),
-                    // Convert a value to an int if possible
-                    "to_int" => {
-                        let value = stack.pop().unwrap();
-                        match value {
-                            Value::String(s) => {
-                                stack.push(Value::Number(Number::Integer(s.parse().unwrap())))
-                            }
-                            Value::Number(n) => stack.push(Value::Number(n.to_integer())),
-                            _ => panic!("int cannot, got {}", value),
-                        }
-                    }
-                    // Convert a value to a float if possible
-                    "to_float" => {
-                        let value = stack.pop().unwrap();
-                        match value {
-                            Value::String(s) => {
-                                stack.push(Value::Number(Number::Float(s.parse().unwrap())))
-                            }
-                            Value::Number(n) => stack.push(Value::Number(n.to_float())),
-                            _ => panic!("int cannot, got {}", value),
-                        }
-                    }
-                    // Apply a block to the stack
-                    "apply" => {
-                        let block = stack.pop().unwrap();
-                        match block {
-                            Value::Block {
-                                arity_in,
-                                arity_out,
-                                expression,
-                            } => {
-                                eval_block(stack, arity_in, expression, arity_out);
-                            }
-                            _ => panic!("apply expects a block, got {}", block),
-                        }
-                    }
-                    // Read a line from stdin as a string
-                    "read" => {
-                        let mut input = String::new();
-                        match std::io::stdin().read_line(&mut input) {
-                            Ok(_) => {
-                                stack.push(Value::String(input.trim_end_matches('\n').to_string()));
-                            }
-                            Err(e) => {
-                                panic!("failed to read from stdin: {e}");
-                            }
-                        };
-                    }
-                    // Pop and write a value to stdout
-                    "write" => {
-                        print!("{}", stack.pop().unwrap());
-                    }
-                    // Pop and write a value to stdout with a newline
-                    "writeln" => {
-                        println!("{}", stack.pop().unwrap());
-                    }
-                    // Write a newline
-                    "newline" => {
-                        println!();
-                    }
-                    // Loop over an iterable, expects a block and an iterable
-                    "loop" => {
-                        let iterable = stack.pop().unwrap();
-                        let block = stack.pop().unwrap();
+                if let Some(global) = GLOBALS.get(id) {
 
-                        match iterable {
-                            Value::Number(Number::Integer(n)) => {
-                                if n < 0 {
-                                    panic!("numeric loops must have a positive integer, got {}", n);
+                } else {
+                    match id.as_str() {
+                        // Built in numeric functions
+                        "+" => numeric_binop!(stack, |a, b| { a + b }),
+                        "-" => numeric_binop!(stack, |a, b| { a - b }),
+                        "*" => numeric_binop!(stack, |a, b| { a * b }),
+                        "/" => numeric_binop!(stack, |a, b| { a / b }),
+                        "%" => numeric_binop!(stack, |a, b| { a % b }),
+                        // Built in comparisons
+                        "<" => comparison_binop!(stack, |a, b| { a < b }),
+                        "<=" => comparison_binop!(stack, |a, b| { a <= b }),
+                        "=" => comparison_binop!(stack, |a, b| { a == b }),
+                        ">=" => comparison_binop!(stack, |a, b| { a >= b }),
+                        ">" => comparison_binop!(stack, |a, b| { a > b }),
+                        // Convert a value to an int if possible
+                        "to_int" => {
+                            let value = stack.pop().unwrap();
+                            match value {
+                                Value::String(s) => {
+                                    stack.push(Value::Number(Number::Integer(s.parse().unwrap())))
                                 }
-
-                                for i in 0..n {
-                                    stack.push(Value::Number(Number::Integer(i)));
-                                    match block.clone() {
-                                        // Blocks get evaluated lazily (now)
-                                        Value::Block { arity_in, arity_out, expression } => {
-                                            eval_block(stack, arity_in, expression, arity_out);
-                                        },
-                                        // Loops must have a block
-                                        _ => panic!("loop must have a block, got {}", block),
-                                    }
-                                }
-                            },
-                            Value::String(s) => {
-                                for c in s.chars() {
-                                    stack.push(Value::String(c.to_string()));
-                                    match block.clone() {
-                                        Value::Block { arity_in, arity_out, expression } => {
-                                            eval_block(stack, arity_in, expression, arity_out);
-                                        },
-                                        _ => panic!("loop must have a block, got {}", block),
-                                    }
-                                }
-                            },
-                            Value::Stack(l) => {
-                                for value in l.clone().borrow().iter() {
-                                    stack.push(value.clone());
-                                    match block.clone() {
-                                        Value::Block { arity_in, arity_out, expression } => {
-                                            eval_block(stack, arity_in, expression, arity_out);
-                                        },
-                                        _ => panic!("loop must have a block, got {}", block),
-                                    }
-                                }
-                            }
-                            _ => panic!("loop must have an iterable (currently an integer or string), got {}", iterable),
-                        };
-                    }
-                    // Loop over an iterable and store the results as a list
-                    "loop->list" => {
-                        let iterable = stack.pop().unwrap();
-                        let block = stack.pop().unwrap();
-                        let mut result = vec![];
-
-                        match iterable {
-                            Value::Number(Number::Integer(n)) => {
-                                if n < 0 {
-                                    panic!("numeric loops must have a positive integer, got {}", n);
-                                }
-
-                                for i in 0..n {
-                                    stack.push(Value::Number(Number::Integer(i)));
-                                    match block.clone() {
-                                        // Blocks get evaluated lazily (now)
-                                        Value::Block { arity_in, arity_out, expression } => {
-                                            eval_block(stack, arity_in, expression, arity_out);
-                                            result.push(stack.pop().unwrap());
-                                        },
-                                        // Loops must have a block
-                                        _ => panic!("loop must have a block, got {}", block),
-                                    }
-                                }
-                            },
-                            Value::String(s) => {
-                                for c in s.chars() {
-                                    stack.push(Value::String(c.to_string()));
-                                    match block.clone() {
-                                        Value::Block { arity_in, arity_out, expression } => {
-                                            eval_block(stack, arity_in, expression, arity_out);
-                                            result.push(stack.pop().unwrap());
-                                        },
-                                        _ => panic!("loop must have a block, got {}", block),
-                                    }
-                                }
-                            },
-                            Value::Stack(l) => {
-                                for value in l.clone().borrow().iter() {
-                                    stack.push(value.clone());
-                                    match block.clone() {
-                                        Value::Block { arity_in, arity_out, expression } => {
-                                            eval_block(stack, arity_in, expression, arity_out);
-                                            result.push(stack.pop().unwrap());
-                                        },
-                                        _ => panic!("loop must have a block, got {}", block),
-                                    }
-                                }
-                            }
-                            _ => panic!("loop must have an iterable (currently an integer or string), got {}", iterable),
-                        };
-
-                        stack.push(Value::Stack(Rc::new(RefCell::new(result))));
-                    }
-                    // If statement, expects two blocks or literals and a conditional (must be boolean)
-                    "if" => {
-                        let condition = stack.pop().unwrap();
-                        let false_branch = stack.pop().unwrap();
-                        let true_branch = stack.pop().unwrap();
-
-                        log::debug!(
-                            "if condition: {}, true: {}, false: {}",
-                            condition,
-                            true_branch,
-                            false_branch
-                        );
-
-                        let branch = match condition {
-                            Value::Boolean(value) => {
-                                if value {
-                                    true_branch
-                                } else {
-                                    false_branch
-                                }
-                            }
-                            _ => panic!("if condition must be a boolean, got {}", condition),
-                        };
-
-                        log::debug!("if selected: {}", branch);
-
-                        match branch {
-                            // Blocks get evaluated lazily (now)
-                            Value::Block {
-                                arity_in,
-                                arity_out,
-                                expression,
-                            } => {
-                                eval_block(stack, arity_in, expression, arity_out);
-                            }
-                            // All literal values just get directly pushed
-                            _ => {
-                                stack.push(branch);
+                                Value::Number(n) => stack.push(Value::Number(n.to_integer())),
+                                _ => panic!("int cannot, got {}", value),
                             }
                         }
-                    }
-                    // Cond statements are like if statements, but with multiple branches
-                    // They expect only an odd numbered list of blocks as input:
-                    // [ test1 value1 test2 value2 ... default ]
-                    // For each test/value pair. If test is true, value is returned and the cond exits
-                    // If no other block returns, return the result of the last block (default)
-                    // All tests should be blocks; values can be blocks or values
-                    "cond" => {
-                        let branches = stack.pop().unwrap();
-
-                        let l = match branches {
-                            Value::Stack(l) => l.clone(),
-                            _ => panic!("cond branches must be a list, got {}", branches),
-                        };
-
-                        let mut cond_returned = false;
-
-                        'cond_loop: for i in 0..(l.clone().borrow().len() / 2) {
-                            let test = &l.borrow()[i * 2];
-                            let value = &l.borrow()[i * 2 + 1];
-
-                            let test_result = match test.clone() {
-                                // Blocks get evaluated lazily (now)
+                        // Convert a value to a float if possible
+                        "to_float" => {
+                            let value = stack.pop().unwrap();
+                            match value {
+                                Value::String(s) => {
+                                    stack.push(Value::Number(Number::Float(s.parse().unwrap())))
+                                }
+                                Value::Number(n) => stack.push(Value::Number(n.to_float())),
+                                _ => panic!("int cannot, got {}", value),
+                            }
+                        }
+                        // Apply a block to the stack
+                        "apply" => {
+                            let block = stack.pop().unwrap();
+                            match block {
                                 Value::Block {
                                     arity_in,
                                     arity_out,
                                     expression,
                                 } => {
                                     eval_block(stack, arity_in, expression, arity_out);
-                                    stack.pop().unwrap()
                                 }
-                                _ => panic!("cond test must be a block, got {}", test),
-                            };
-
-                            match test_result {
-                                Value::Boolean(test_value) => {
-                                    if test_value {
-                                        match value.clone() {
-                                            // Blocks get evaluated lazily (now)
-                                            Value::Block {
-                                                arity_in,
-                                                arity_out,
-                                                expression,
-                                            } => {
-                                                eval_block(stack, arity_in, expression, arity_out);
-                                            }
-                                            // All literal values just get directly pushed
-                                            _ => {
-                                                stack.push(value.clone());
-                                            }
-                                        }
-
-                                        cond_returned = true;
-                                        break 'cond_loop;
-                                    }
-                                }
-                                _ => panic!("cond test must return a boolean, got {}", test_result),
+                                _ => panic!("apply expects a block, got {}", block),
                             }
                         }
+                        // Read a line from stdin as a string
+                        "read" => {
+                            let mut input = String::new();
+                            match std::io::stdin().read_line(&mut input) {
+                                Ok(_) => {
+                                    stack.push(Value::String(input.trim_end_matches('\n').to_string()));
+                                }
+                                Err(e) => {
+                                    panic!("failed to read from stdin: {e}");
+                                }
+                            };
+                        }
+                        // Pop and write a value to stdout
+                        "write" => {
+                            print!("{}", stack.pop().unwrap());
+                        }
+                        // Pop and write a value to stdout with a newline
+                        "writeln" => {
+                            println!("{}", stack.pop().unwrap());
+                        }
+                        // Write a newline
+                        "newline" => {
+                            println!();
+                        }
+                        // Loop over an iterable, expects a block and an iterable
+                        "loop" => {
+                            let iterable = stack.pop().unwrap();
+                            let block = stack.pop().unwrap();
 
-                        // If we didn't return from the cond, return the last value
-                        if !cond_returned {
-                            let default = &l.borrow()[l.borrow().len() - 1];
+                            match iterable {
+                                Value::Number(Number::Integer(n)) => {
+                                    if n < 0 {
+                                        panic!("numeric loops must have a positive integer, got {}", n);
+                                    }
 
-                            match default.clone() {
+                                    for i in 0..n {
+                                        stack.push(Value::Number(Number::Integer(i)));
+                                        match block.clone() {
+                                            // Blocks get evaluated lazily (now)
+                                            Value::Block { arity_in, arity_out, expression } => {
+                                                eval_block(stack, arity_in, expression, arity_out);
+                                            },
+                                            // Loops must have a block
+                                            _ => panic!("loop must have a block, got {}", block),
+                                        }
+                                    }
+                                },
+                                Value::String(s) => {
+                                    for c in s.chars() {
+                                        stack.push(Value::String(c.to_string()));
+                                        match block.clone() {
+                                            Value::Block { arity_in, arity_out, expression } => {
+                                                eval_block(stack, arity_in, expression, arity_out);
+                                            },
+                                            _ => panic!("loop must have a block, got {}", block),
+                                        }
+                                    }
+                                },
+                                Value::Stack(l) => {
+                                    for value in l.clone().borrow().iter() {
+                                        stack.push(value.clone());
+                                        match block.clone() {
+                                            Value::Block { arity_in, arity_out, expression } => {
+                                                eval_block(stack, arity_in, expression, arity_out);
+                                            },
+                                            _ => panic!("loop must have a block, got {}", block),
+                                        }
+                                    }
+                                }
+                                _ => panic!("loop must have an iterable (currently an integer or string), got {}", iterable),
+                            };
+                        }
+                        // Loop over an iterable and store the results as a list
+                        "loop->list" => {
+                            let iterable = stack.pop().unwrap();
+                            let block = stack.pop().unwrap();
+                            let mut result = vec![];
+
+                            match iterable {
+                                Value::Number(Number::Integer(n)) => {
+                                    if n < 0 {
+                                        panic!("numeric loops must have a positive integer, got {}", n);
+                                    }
+
+                                    for i in 0..n {
+                                        stack.push(Value::Number(Number::Integer(i)));
+                                        match block.clone() {
+                                            // Blocks get evaluated lazily (now)
+                                            Value::Block { arity_in, arity_out, expression } => {
+                                                eval_block(stack, arity_in, expression, arity_out);
+                                                result.push(stack.pop().unwrap());
+                                            },
+                                            // Loops must have a block
+                                            _ => panic!("loop must have a block, got {}", block),
+                                        }
+                                    }
+                                },
+                                Value::String(s) => {
+                                    for c in s.chars() {
+                                        stack.push(Value::String(c.to_string()));
+                                        match block.clone() {
+                                            Value::Block { arity_in, arity_out, expression } => {
+                                                eval_block(stack, arity_in, expression, arity_out);
+                                                result.push(stack.pop().unwrap());
+                                            },
+                                            _ => panic!("loop must have a block, got {}", block),
+                                        }
+                                    }
+                                },
+                                Value::Stack(l) => {
+                                    for value in l.clone().borrow().iter() {
+                                        stack.push(value.clone());
+                                        match block.clone() {
+                                            Value::Block { arity_in, arity_out, expression } => {
+                                                eval_block(stack, arity_in, expression, arity_out);
+                                                result.push(stack.pop().unwrap());
+                                            },
+                                            _ => panic!("loop must have a block, got {}", block),
+                                        }
+                                    }
+                                }
+                                _ => panic!("loop must have an iterable (currently an integer or string), got {}", iterable),
+                            };
+
+                            stack.push(Value::Stack(Rc::new(RefCell::new(result))));
+                        }
+                        // If statement, expects two blocks or literals and a conditional (must be boolean)
+                        "if" => {
+                            let condition = stack.pop().unwrap();
+                            let false_branch = stack.pop().unwrap();
+                            let true_branch = stack.pop().unwrap();
+
+                            log::debug!(
+                                "if condition: {}, true: {}, false: {}",
+                                condition,
+                                true_branch,
+                                false_branch
+                            );
+
+                            let branch = match condition {
+                                Value::Boolean(value) => {
+                                    if value {
+                                        true_branch
+                                    } else {
+                                        false_branch
+                                    }
+                                }
+                                _ => panic!("if condition must be a boolean, got {}", condition),
+                            };
+
+                            log::debug!("if selected: {}", branch);
+
+                            match branch {
                                 // Blocks get evaluated lazily (now)
                                 Value::Block {
                                     arity_in,
@@ -379,196 +305,275 @@ pub fn evaluate(ast: Expression) {
                                 }
                                 // All literal values just get directly pushed
                                 _ => {
-                                    stack.push(default.clone());
+                                    stack.push(branch);
                                 }
                             }
                         }
-                    }
-                    // List (vector) implementation
-                    "make-list" => {
-                        let list = Value::Stack(Rc::new(RefCell::new(vec![])));
-                        stack.push(list);
-                    }
-                    "stack-size" => {
-                        let list = stack.pop().unwrap();
+                        // Cond statements are like if statements, but with multiple branches
+                        // They expect only an odd numbered list of blocks as input:
+                        // [ test1 value1 test2 value2 ... default ]
+                        // For each test/value pair. If test is true, value is returned and the cond exits
+                        // If no other block returns, return the result of the last block (default)
+                        // All tests should be blocks; values can be blocks or values
+                        "cond" => {
+                            let branches = stack.pop().unwrap();
 
-                        match list {
-                            Value::Stack(l) => {
-                                stack.push(Value::Number(Number::Integer(
-                                    l.clone().borrow().len() as i64,
-                                )));
+                            let l = match branches {
+                                Value::Stack(l) => l.clone(),
+                                _ => panic!("cond branches must be a list, got {}", branches),
+                            };
+
+                            let mut cond_returned = false;
+
+                            'cond_loop: for i in 0..(l.clone().borrow().len() / 2) {
+                                let test = &l.borrow()[i * 2];
+                                let value = &l.borrow()[i * 2 + 1];
+
+                                let test_result = match test.clone() {
+                                    // Blocks get evaluated lazily (now)
+                                    Value::Block {
+                                        arity_in,
+                                        arity_out,
+                                        expression,
+                                    } => {
+                                        eval_block(stack, arity_in, expression, arity_out);
+                                        stack.pop().unwrap()
+                                    }
+                                    _ => panic!("cond test must be a block, got {}", test),
+                                };
+
+                                match test_result {
+                                    Value::Boolean(test_value) => {
+                                        if test_value {
+                                            match value.clone() {
+                                                // Blocks get evaluated lazily (now)
+                                                Value::Block {
+                                                    arity_in,
+                                                    arity_out,
+                                                    expression,
+                                                } => {
+                                                    eval_block(stack, arity_in, expression, arity_out);
+                                                }
+                                                // All literal values just get directly pushed
+                                                _ => {
+                                                    stack.push(value.clone());
+                                                }
+                                            }
+
+                                            cond_returned = true;
+                                            break 'cond_loop;
+                                        }
+                                    }
+                                    _ => panic!("cond test must return a boolean, got {}", test_result),
+                                }
                             }
-                            _ => panic!("stack-size: expected list, got {}", list),
-                        }
-                    }
-                    "stack-push!" => {
-                        let value = stack.pop().unwrap();
-                        let list = stack.pop().unwrap();
 
-                        match list {
-                            Value::Stack(l) => {
-                                l.clone().borrow_mut().push(value);
+                            // If we didn't return from the cond, return the last value
+                            if !cond_returned {
+                                let default = &l.borrow()[l.borrow().len() - 1];
+
+                                match default.clone() {
+                                    // Blocks get evaluated lazily (now)
+                                    Value::Block {
+                                        arity_in,
+                                        arity_out,
+                                        expression,
+                                    } => {
+                                        eval_block(stack, arity_in, expression, arity_out);
+                                    }
+                                    // All literal values just get directly pushed
+                                    _ => {
+                                        stack.push(default.clone());
+                                    }
+                                }
                             }
-                            _ => panic!("stack-push!: expected list, got {}", list),
                         }
-                    }
-                    "stack-pop!" => {
-                        let list = stack.pop().unwrap();
+                        // List (vector) implementation
+                        "make-list" => {
+                            let list = Value::Stack(Rc::new(RefCell::new(vec![])));
+                            stack.push(list);
+                        }
+                        "stack-size" => {
+                            let list = stack.pop().unwrap();
 
-                        match list {
-                            Value::Stack(l) => {
-                                if let Some(value) = l.clone().borrow_mut().pop() {
-                                    stack.push(value);
+                            match list {
+                                Value::Stack(l) => {
+                                    stack.push(Value::Number(Number::Integer(
+                                        l.clone().borrow().len() as i64,
+                                    )));
+                                }
+                                _ => panic!("stack-size: expected list, got {}", list),
+                            }
+                        }
+                        "stack-push!" => {
+                            let value = stack.pop().unwrap();
+                            let list = stack.pop().unwrap();
+
+                            match list {
+                                Value::Stack(l) => {
+                                    l.clone().borrow_mut().push(value);
+                                }
+                                _ => panic!("stack-push!: expected list, got {}", list),
+                            }
+                        }
+                        "stack-pop!" => {
+                            let list = stack.pop().unwrap();
+
+                            match list {
+                                Value::Stack(l) => {
+                                    if let Some(value) = l.clone().borrow_mut().pop() {
+                                        stack.push(value);
+                                    } else {
+                                        panic!("stack-pop!: list is empty");
+                                    }
+                                }
+                                _ => panic!("stack-pop!: expected list, got {}", list),
+                            }
+                        }
+                        "stack-ref" => {
+                            let index = stack.pop().unwrap();
+                            let list = stack.pop().unwrap();
+
+                            match list {
+                                Value::Stack(l) => match index {
+                                    Value::Number(Number::Integer(i)) => {
+                                        if let Some(value) = l.clone().borrow().get(i as usize) {
+                                            stack.push(value.clone());
+                                        } else {
+                                            panic!("stack-ref: index out of bounds: {}", i);
+                                        }
+                                    }
+                                    _ => panic!("stack-ref: index must be an integer, got {}", index),
+                                },
+                                _ => panic!("stack-ref: expected list, got {}", list),
+                            }
+                        }
+                        "stack-set!" => {
+                            let value = stack.pop().unwrap();
+                            let index = stack.pop().unwrap();
+                            let list = stack.pop().unwrap();
+
+                            match list {
+                                Value::Stack(l) => match index {
+                                    Value::Number(Number::Integer(i)) => {
+                                        if let Some(old_value) =
+                                            l.clone().borrow_mut().get_mut(i as usize)
+                                        {
+                                            *old_value = value.clone();
+                                        } else {
+                                            panic!("stack-set!: index out of bounds: {}", i);
+                                        }
+                                    }
+                                    _ => panic!("stack-set!: index must be an integer, got {}", index),
+                                },
+                                _ => panic!("stack-set!: expected list, got {}", list),
+                            }
+                        }
+                        // Hashmap implementation
+                        "make-hash" => {
+                            let hash = Value::Hash(Rc::new(RefCell::new(HashMap::new())));
+                            stack.push(hash);
+                        }
+                        "make-int-hash" => {
+                            let hash = Value::IntHash(Rc::new(RefCell::new(HashMap::new())));
+                            stack.push(hash);
+                        }
+                        "hash-has?" => {
+                            let key = stack.pop().unwrap();
+                            let hash = stack.pop().unwrap();
+
+                            match hash {
+                                Value::Hash(h) => match key {
+                                    Value::String(s) => {
+                                        stack.push(Value::Boolean(h.clone().borrow().contains_key(&s)));
+                                    }
+                                    _ => panic!("hash-has?: Hash key must be a string, got {}", key),
+                                },
+                                Value::IntHash(h) => match key {
+                                    Value::Number(Number::Integer(v)) => {
+                                        stack.push(Value::Boolean(h.clone().borrow().contains_key(&v)));
+                                    }
+                                    _ => {
+                                        panic!("hash-has?: IntHash key must be an integer, got {}", key)
+                                    }
+                                },
+                                _ => panic!("hash-has?: hash must be a hash, got {}", hash),
+                            }
+                        }
+                        "hash-get" => {
+                            let key = stack.pop().unwrap();
+                            let hash = stack.pop().unwrap();
+
+                            match hash {
+                                Value::Hash(h) => match key {
+                                    Value::String(s) => {
+                                        if let Some(value) = h.clone().borrow().get(&s) {
+                                            stack.push(value.clone());
+                                        } else {
+                                            panic!("hash-get: key not found: {}", s);
+                                        }
+                                    }
+                                    _ => panic!("hash-get: Hash key must be a string, got {}", key),
+                                },
+                                Value::IntHash(h) => match key {
+                                    Value::Number(Number::Integer(v)) => {
+                                        if let Some(value) = h.clone().borrow().get(&v) {
+                                            stack.push(value.clone());
+                                        } else {
+                                            panic!("hash-get: key not found: {}", v);
+                                        }
+                                    }
+                                    _ => {
+                                        panic!("hash-get: IntHash key must be an integer, got {}", key)
+                                    }
+                                },
+                                _ => panic!("hash-get: hash must be a hash, got {}", hash),
+                            }
+                        }
+                        "hash-set!" => {
+                            let value = stack.pop().unwrap();
+                            let key = stack.pop().unwrap();
+                            let hash = stack.pop().unwrap();
+
+                            match hash {
+                                Value::Hash(h) => match key {
+                                    Value::String(ref s) => {
+                                        h.clone().borrow_mut().insert(s.clone(), value);
+                                    }
+                                    _ => {
+                                        panic!("hash-set!: Hash key must be a string, got {}", key);
+                                    }
+                                },
+                                Value::IntHash(h) => match key {
+                                    Value::Number(Number::Integer(v)) => {
+                                        h.clone().borrow_mut().insert(v, value);
+                                    }
+                                    _ => {
+                                        panic!(
+                                            "hash-set!: IntHash key must be an integer, got {}",
+                                            key
+                                        );
+                                    }
+                                },
+                                _ => panic!("hash-set!: hash must be a hash, got {}", hash),
+                            }
+                        }
+                        // Anything else is a variable lookup
+                        name => {
+                            if let Some(value) = stack.get_named(String::from(name)) {
+                                if let Value::Block {
+                                    arity_in,
+                                    arity_out,
+                                    expression,
+                                } = value
+                                {
+                                    eval_block(stack, arity_in, expression, arity_out);
                                 } else {
-                                    panic!("stack-pop!: list is empty");
+                                    stack.push(value);
                                 }
-                            }
-                            _ => panic!("stack-pop!: expected list, got {}", list),
-                        }
-                    }
-                    "stack-ref" => {
-                        let index = stack.pop().unwrap();
-                        let list = stack.pop().unwrap();
-
-                        match list {
-                            Value::Stack(l) => match index {
-                                Value::Number(Number::Integer(i)) => {
-                                    if let Some(value) = l.clone().borrow().get(i as usize) {
-                                        stack.push(value.clone());
-                                    } else {
-                                        panic!("stack-ref: index out of bounds: {}", i);
-                                    }
-                                }
-                                _ => panic!("stack-ref: index must be an integer, got {}", index),
-                            },
-                            _ => panic!("stack-ref: expected list, got {}", list),
-                        }
-                    }
-                    "stack-set!" => {
-                        let value = stack.pop().unwrap();
-                        let index = stack.pop().unwrap();
-                        let list = stack.pop().unwrap();
-
-                        match list {
-                            Value::Stack(l) => match index {
-                                Value::Number(Number::Integer(i)) => {
-                                    if let Some(old_value) =
-                                        l.clone().borrow_mut().get_mut(i as usize)
-                                    {
-                                        *old_value = value.clone();
-                                    } else {
-                                        panic!("stack-set!: index out of bounds: {}", i);
-                                    }
-                                }
-                                _ => panic!("stack-set!: index must be an integer, got {}", index),
-                            },
-                            _ => panic!("stack-set!: expected list, got {}", list),
-                        }
-                    }
-                    // Hashmap implementation
-                    "make-hash" => {
-                        let hash = Value::Hash(Rc::new(RefCell::new(HashMap::new())));
-                        stack.push(hash);
-                    }
-                    "make-int-hash" => {
-                        let hash = Value::IntHash(Rc::new(RefCell::new(HashMap::new())));
-                        stack.push(hash);
-                    }
-                    "hash-has?" => {
-                        let key = stack.pop().unwrap();
-                        let hash = stack.pop().unwrap();
-
-                        match hash {
-                            Value::Hash(h) => match key {
-                                Value::String(s) => {
-                                    stack.push(Value::Boolean(h.clone().borrow().contains_key(&s)));
-                                }
-                                _ => panic!("hash-has?: Hash key must be a string, got {}", key),
-                            },
-                            Value::IntHash(h) => match key {
-                                Value::Number(Number::Integer(v)) => {
-                                    stack.push(Value::Boolean(h.clone().borrow().contains_key(&v)));
-                                }
-                                _ => {
-                                    panic!("hash-has?: IntHash key must be an integer, got {}", key)
-                                }
-                            },
-                            _ => panic!("hash-has?: hash must be a hash, got {}", hash),
-                        }
-                    }
-                    "hash-get" => {
-                        let key = stack.pop().unwrap();
-                        let hash = stack.pop().unwrap();
-
-                        match hash {
-                            Value::Hash(h) => match key {
-                                Value::String(s) => {
-                                    if let Some(value) = h.clone().borrow().get(&s) {
-                                        stack.push(value.clone());
-                                    } else {
-                                        panic!("hash-get: key not found: {}", s);
-                                    }
-                                }
-                                _ => panic!("hash-get: Hash key must be a string, got {}", key),
-                            },
-                            Value::IntHash(h) => match key {
-                                Value::Number(Number::Integer(v)) => {
-                                    if let Some(value) = h.clone().borrow().get(&v) {
-                                        stack.push(value.clone());
-                                    } else {
-                                        panic!("hash-get: key not found: {}", v);
-                                    }
-                                }
-                                _ => {
-                                    panic!("hash-get: IntHash key must be an integer, got {}", key)
-                                }
-                            },
-                            _ => panic!("hash-get: hash must be a hash, got {}", hash),
-                        }
-                    }
-                    "hash-set!" => {
-                        let value = stack.pop().unwrap();
-                        let key = stack.pop().unwrap();
-                        let hash = stack.pop().unwrap();
-
-                        match hash {
-                            Value::Hash(h) => match key {
-                                Value::String(ref s) => {
-                                    h.clone().borrow_mut().insert(s.clone(), value);
-                                }
-                                _ => {
-                                    panic!("hash-set!: Hash key must be a string, got {}", key);
-                                }
-                            },
-                            Value::IntHash(h) => match key {
-                                Value::Number(Number::Integer(v)) => {
-                                    h.clone().borrow_mut().insert(v, value);
-                                }
-                                _ => {
-                                    panic!(
-                                        "hash-set!: IntHash key must be an integer, got {}",
-                                        key
-                                    );
-                                }
-                            },
-                            _ => panic!("hash-set!: hash must be a hash, got {}", hash),
-                        }
-                    }
-                    // Anything else is a variable lookup
-                    name => {
-                        if let Some(value) = stack.get_named(String::from(name)) {
-                            if let Value::Block {
-                                arity_in,
-                                arity_out,
-                                expression,
-                            } = value
-                            {
-                                eval_block(stack, arity_in, expression, arity_out);
                             } else {
-                                stack.push(value);
+                                panic!("Unknown identifier {:?}", name);
                             }
-                        } else {
-                            panic!("Unknown identifier {:?}", name);
                         }
                     }
                 }
