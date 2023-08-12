@@ -280,6 +280,9 @@ pub fn compile(ast: Expression) -> String {
                             "loop" => lines.push(
                                 include_str!("../compile_c_includes/builtins/loop.c").to_string(),
                             ),
+                            "loop->list" => lines.push(
+                                include_str!("../compile_c_includes/builtins/loop-list.c").to_string(),
+                            ),
                             "if" => lines.push(
                                 include_str!("../compile_c_includes/builtins/if.c").to_string(),
                             ),
