@@ -93,7 +93,7 @@ fn main() {
             let ast = parser::parse(tokens);
             log::info!("AST:\n{:#?}", ast);
 
-            vm::evaluate(ast);
+            vm::VM::new().evaluate(ast);
         }
         Command::Compile { run, output, path } => {
             let file = std::fs::File::open(path.clone()).unwrap();

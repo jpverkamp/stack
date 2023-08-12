@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use crate::types::Value;
-use std::{cell::RefCell, collections::HashMap, fmt::Display, rc::Rc};
+use std::{collections::HashMap, fmt::Display};
 
 /// A stack in the context of the VM
 ///
@@ -10,46 +10,66 @@ use std::{cell::RefCell, collections::HashMap, fmt::Display, rc::Rc};
 #[derive(Debug, Clone, Default)]
 pub struct Stack {
     // The values on the stack
-    data: Rc<RefCell<Vec<Value>>>,
-    // A mapping of names to indices in the data
-    names: HashMap<String, usize>,
-    // The parent of this stack for name lookups
-    parent: Option<Rc<RefCell<Stack>>>,
+    data: Vec<Value>,
+    // A stack of return indexes to the stack
+    returns: Vec<usize>,
+    // A scoped mapping of names to indices in the data
+    names: Vec<HashMap<String, usize>>,
 }
 
 impl Stack {
     /// Creates a new top level stack
     pub fn new() -> Self {
-        Stack::default()
+        let mut s = Stack::default();
+        s.extend(0);
+        s
     }
 
-    /// Creates a new stack with the current stack as its parent
+    /// Creates a new scope
     ///
-    /// n is the number of values to pop from the parent stack and push onto this one
-    pub fn extend(&mut self, n: usize) -> Self {
-        let mut values = vec![];
-        for _ in 0..n {
-            values.push(self.pop().unwrap());
-        }
-        values.reverse();
+    /// arity is the number of values to pop from the parent stack and push onto this one
+    pub fn extend(&mut self, arity: usize) {
+        self.returns.push(self.data.len() - arity);
+        self.names.push(HashMap::new());
+    }
 
-        Stack {
-            data: Rc::new(RefCell::new(values)),
-            names: HashMap::new(),
-            parent: Some(Rc::new(RefCell::new(self.clone()))),
+    /// Returns from a scope
+    /// 
+    /// arity is the number of values to pop from this stack and push onto the parent
+    pub fn contract(&mut self, arity: usize) {
+        // Drop this scope
+        let return_index = self.returns.pop().unwrap();
+        self.names.pop();
+
+        let to_drop = self.data.len() - return_index - arity;
+
+        // Copy the return values
+        let mut to_push = vec![];
+        for _ in 0..arity {
+            to_push.push(self.data.pop().unwrap());
+        }
+
+        // Drop extra values we may have created
+        for _ in 0..to_drop {
+            self.data.pop();
+        }
+
+        // Push copied values back
+        for v in to_push.into_iter().rev() {
+            self.data.push(v);
         }
     }
 
     /// Pushes a value onto the stack
     pub fn push(&mut self, value: Value) {
-        self.data.clone().borrow_mut().push(value);
+        self.data.push(value);
     }
 
     /// Pops a value off the stack
     ///
     /// TODO: Handle popping a named value
     pub fn pop(&mut self) -> Option<Value> {
-        self.data.clone().borrow_mut().pop()
+        self.data.pop()
     }
 
     /// Assign a new name to the top value on the stack
@@ -57,7 +77,9 @@ impl Stack {
     /// A single stack can have multiple names for the same value
     pub fn name(&mut self, name: String) {
         self.names
-            .insert(name, self.data.clone().borrow().len() - 1);
+            .last_mut()
+            .unwrap()
+            .insert(name, self.data.len() - 1);
     }
 
     /// Assigns a new name to the top N values of the stack (from bottom to top)
@@ -65,10 +87,10 @@ impl Stack {
     /// If the stack is [8, 6, 7, 5], name_many("A", "B") would result in [8, 6, 7@A, 5@B]
     pub fn name_many(&mut self, names: Vec<String>) {
         for (i, name) in names.iter().enumerate() {
-            self.names.insert(
-                name.clone(),
-                self.data.clone().borrow().len() - names.len() + i,
-            );
+            self.names
+                .last_mut()
+                .unwrap()
+                .insert(name.clone(), self.data.len() - names.len() + i);
         }
     }
 
@@ -78,13 +100,13 @@ impl Stack {
     pub fn get_named(&self, name: String) -> Option<Value> {
         log::debug!("get_named({}) from {}", name, self);
 
-        if self.names.contains_key(&name) {
-            Some(self.data.clone().borrow()[self.names[&name]].clone())
-        } else if self.parent.is_some() {
-            self.parent.as_ref().unwrap().borrow().get_named(name)
-        } else {
-            None
+        for names in self.names.iter().rev() {
+            if names.contains_key(&name) {
+                return Some(self.data[names[&name]].clone());
+            }
         }
+
+        None
     }
 
     /// Set a named value on this stack (including the parent)
@@ -94,49 +116,40 @@ impl Stack {
     pub fn set_named(&mut self, name: String, value: Value) {
         log::debug!("set_named({}, {}) on {}", name, value, self);
 
-        if self.names.contains_key(&name) {
-            self.data
-                .clone()
-                .borrow_mut()
-                .insert(self.names[&name], value);
-            // self.data[self.names[&name]] = value;
-        } else if self.parent.is_some() {
-            self.parent
-                .as_ref()
-                .unwrap()
-                .clone()
-                .borrow_mut()
-                .set_named(name, value);
-        } else {
-            panic!("set_named({}, {}) on {}", name, value, self);
+        for names in self.names.iter_mut().rev() {
+            if names.contains_key(&name) {
+                let index = names[&name];
+                self.data[index] = value;
+                return;
+            }
         }
+
+        panic!("set_named({}, {}) on {} couldn't find name", name, value, self);
     }
 }
 
 impl Display for Stack {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut s = String::new();
+        s.push_str(" stack<");
 
-        if self.parent.is_some() {
-            s.push_str(self.parent.as_ref().unwrap().borrow().to_string().as_str());
-            s.push_str(" : ");
-        }
+        for (i, value) in self.data.iter().enumerate() {
+            if self.returns.contains(&i) {
+                s.push_str(" | ");
+            }
 
-        s.push('[');
-        for (i, v) in self.data.clone().borrow().iter().enumerate() {
-            s.push_str(format!("{}", v).as_str());
+            s.push_str(format!("{}", value).as_str());
 
-            for (k, v) in self.names.iter() {
-                if *v == i {
-                    s.push_str(&format!("@{}", k));
+            for names in self.names.iter().rev() {
+                for (k, v) in names.iter() {
+                    if *v == i {
+                        s.push_str(&format!("@{}", k));
+                    }
                 }
             }
-
-            if i != self.data.clone().borrow().len() - 1 {
-                s.push(' ');
-            }
         }
-        s.push(']');
+
+        s.push_str(">");
         write!(f, "{}", s)
     }
 }
