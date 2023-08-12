@@ -8,10 +8,6 @@ use crate::debug;
 use crate::numbers::Number;
 use crate::types::{Expression, Value};
 
-pub enum CCode {
-    Block(Vec<String>),
-    Expression(Vec<String>),
-}
 
 /// A helper macro to generate functions that operate on two integers and floats
 macro_rules! numeric_binop {

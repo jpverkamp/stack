@@ -4,12 +4,9 @@ use std::{env, io::BufReader, path::PathBuf};
 
 mod debug;
 
-mod ccode;
 mod numbers;
 mod stack;
 mod types;
-
-mod globals;
 
 mod arity;
 mod compile_c;
