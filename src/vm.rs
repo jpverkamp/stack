@@ -22,12 +22,7 @@ impl VM {
 
     /// Evaluates a single block
     /// This does not actually return anything, but instead mutates the self.stack
-    fn evaluate_block(
-        &mut self,
-        arity_in: usize,
-        expression: Box<Expression>,
-        arity_out: usize,
-    ) {
+    fn evaluate_block(&mut self, arity_in: usize, expression: Box<Expression>, arity_out: usize) {
         self.stack.extend(arity_in);
         self.evaluate(expression.as_ref().clone());
         self.stack.contract(arity_out);
@@ -100,9 +95,9 @@ impl VM {
                     "to_int" => {
                         let value = self.stack.pop().unwrap();
                         match value {
-                            Value::String(s) => {
-                                self.stack.push(Value::Number(Number::Integer(s.parse().unwrap())))
-                            }
+                            Value::String(s) => self
+                                .stack
+                                .push(Value::Number(Number::Integer(s.parse().unwrap()))),
                             Value::Number(n) => self.stack.push(Value::Number(n.to_integer())),
                             _ => panic!("int cannot, got {}", value),
                         }
@@ -111,9 +106,9 @@ impl VM {
                     "to_float" => {
                         let value = self.stack.pop().unwrap();
                         match value {
-                            Value::String(s) => {
-                                self.stack.push(Value::Number(Number::Float(s.parse().unwrap())))
-                            }
+                            Value::String(s) => self
+                                .stack
+                                .push(Value::Number(Number::Float(s.parse().unwrap()))),
                             Value::Number(n) => self.stack.push(Value::Number(n.to_float())),
                             _ => panic!("int cannot, got {}", value),
                         }
@@ -137,9 +132,8 @@ impl VM {
                         let mut input = String::new();
                         match std::io::stdin().read_line(&mut input) {
                             Ok(_) => {
-                                self.stack.push(Value::String(
-                                    input.trim_end_matches('\n').to_string(),
-                                ));
+                                self.stack
+                                    .push(Value::String(input.trim_end_matches('\n').to_string()));
                             }
                             Err(e) => {
                                 panic!("failed to read from stdin: {e}");
@@ -344,7 +338,8 @@ impl VM {
                                                 arity_out,
                                                 expression,
                                             } => {
-                                                self.evaluate_block(arity_in, expression, arity_out,
+                                                self.evaluate_block(
+                                                    arity_in, expression, arity_out,
                                                 );
                                             }
                                             // All literal values just get directly pushed
@@ -357,10 +352,7 @@ impl VM {
                                         break 'cond_loop;
                                     }
                                 }
-                                _ => panic!(
-                                    "cond test must return a boolean, got {}",
-                                    test_result
-                                ),
+                                _ => panic!("cond test must return a boolean, got {}", test_result),
                             }
                         }
 
@@ -462,10 +454,7 @@ impl VM {
                                         panic!("stack-set!: index out of bounds: {}", i);
                                     }
                                 }
-                                _ => panic!(
-                                    "stack-set!: index must be an integer, got {}",
-                                    index
-                                ),
+                                _ => panic!("stack-set!: index must be an integer, got {}", index),
                             },
                             _ => panic!("stack-set!: expected list, got {}", list),
                         }
@@ -486,9 +475,8 @@ impl VM {
                         match hash {
                             Value::Hash(h) => match key {
                                 Value::String(s) => {
-                                    self.stack.push(Value::Boolean(
-                                        h.clone().borrow().contains_key(&s),
-                                    ));
+                                    self.stack
+                                        .push(Value::Boolean(h.clone().borrow().contains_key(&s)));
                                 }
                                 _ => {
                                     panic!("hash-has?: Hash key must be a string, got {}", key)
@@ -496,15 +484,11 @@ impl VM {
                             },
                             Value::IntHash(h) => match key {
                                 Value::Number(Number::Integer(v)) => {
-                                    self.stack.push(Value::Boolean(
-                                        h.clone().borrow().contains_key(&v),
-                                    ));
+                                    self.stack
+                                        .push(Value::Boolean(h.clone().borrow().contains_key(&v)));
                                 }
                                 _ => {
-                                    panic!(
-                                        "hash-has?: IntHash key must be an integer, got {}",
-                                        key
-                                    )
+                                    panic!("hash-has?: IntHash key must be an integer, got {}", key)
                                 }
                             },
                             _ => panic!("hash-has?: hash must be a hash, got {}", hash),
@@ -534,10 +518,7 @@ impl VM {
                                     }
                                 }
                                 _ => {
-                                    panic!(
-                                        "hash-get: IntHash key must be an integer, got {}",
-                                        key
-                                    )
+                                    panic!("hash-get: IntHash key must be an integer, got {}", key)
                                 }
                             },
                             _ => panic!("hash-get: hash must be a hash, got {}", hash),

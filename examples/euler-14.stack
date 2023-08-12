@@ -39,7 +39,7 @@ cache 1 1 hash-set!
   @v !0
   v 1 + !v
   v collatz-length @l
-
+  
   {
     @0 !0
     v !best-v

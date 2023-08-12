@@ -34,7 +34,7 @@ impl Stack {
     }
 
     /// Returns from a scope
-    /// 
+    ///
     /// arity is the number of values to pop from this stack and push onto the parent
     pub fn contract(&mut self, arity: usize) {
         // Drop this scope
@@ -68,7 +68,7 @@ impl Stack {
 
     /// Pops a value off the stack
     ///
-    /// TODO: Handle popping a named value? 
+    /// TODO: Handle popping a named value?
     pub fn pop(&mut self) -> Option<Value> {
         self.data.pop()
     }
@@ -125,7 +125,10 @@ impl Stack {
             }
         }
 
-        panic!("set_named({}, {}) on {} couldn't find name", name, value, self);
+        panic!(
+            "set_named({}, {}) on {} couldn't find name",
+            name, value, self
+        );
     }
 }
 
