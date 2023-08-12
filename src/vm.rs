@@ -201,7 +201,7 @@ impl VM {
                     };
                     }
                     // Loop over an iterable and store the results as a list
-                    "loop->list" => {
+                    "generate-stack" => {
                         let iterable = self.stack.pop().unwrap();
                         let block = self.stack.pop().unwrap();
                         let mut result = vec![];

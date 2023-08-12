@@ -1,0 +1,4 @@
+{ 
+    @n
+    n 2 *
+} 10 generate-stack writeln

@@ -82,7 +82,7 @@ expect: 7+3i
 [[1, 2, 3], [4, 5], [7, 8, 9, 0], [a, b, c]]
 "
     );
-    make_tests!(loop_list: "examples/loop-list.stack" => "[0, 2, 4, 6, 8, 10, 12, 14, 16, 18]\n");
+    make_tests!(loop_list: "examples/generate-stack.stack" => "[0, 2, 4, 6, 8, 10, 12, 14, 16, 18]\n");
     make_tests!(recursion: "examples/factorial.stack" => "3628800\n");
     make_tests!(recursive_helper: "examples/fibonacci-acc.stack" => "102334155\n");
     make_tests!(mutual_recursion: "examples/even-odd.stack" => "false\ntrue\ntrue\nfalse\n");
