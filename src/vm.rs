@@ -6,7 +6,6 @@ use crate::arity::calculate_arity;
 use crate::numbers::Number;
 use crate::stack::Stack;
 use crate::types::{Expression, Value};
-use crate::globals::GLOBALS;
 
 /// Evaluates a vector of expressions
 /// This does not actually return anything, but instead mutates the stack
