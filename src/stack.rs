@@ -12,7 +12,7 @@ pub struct Stack {
     // The values on the stack
     data: Vec<Value>,
     // A stack of return indexes to the stack
-    returns: Vec<usize>,
+    stack_pointers: Vec<usize>,
     // A scoped mapping of names to indices in the data
     names: Vec<HashMap<String, usize>>,
 }
@@ -29,7 +29,7 @@ impl Stack {
     ///
     /// arity is the number of values to pop from the parent stack and push onto this one
     pub fn extend(&mut self, arity: usize) {
-        self.returns.push(self.data.len() - arity);
+        self.stack_pointers.push(self.data.len() - arity);
         self.names.push(HashMap::new());
     }
 
@@ -38,9 +38,10 @@ impl Stack {
     /// arity is the number of values to pop from this stack and push onto the parent
     pub fn contract(&mut self, arity: usize) {
         // Drop this scope
-        let return_index = self.returns.pop().unwrap();
+        let return_index = self.stack_pointers.pop().unwrap();
         self.names.pop();
 
+        // Any value that are on the stack outside of arity are dropped
         let to_drop = self.data.len() - return_index - arity;
 
         // Copy the return values
@@ -67,7 +68,7 @@ impl Stack {
 
     /// Pops a value off the stack
     ///
-    /// TODO: Handle popping a named value
+    /// TODO: Handle popping a named value? 
     pub fn pop(&mut self) -> Option<Value> {
         self.data.pop()
     }
@@ -134,7 +135,7 @@ impl Display for Stack {
         s.push_str(" stack<");
 
         for (i, value) in self.data.iter().enumerate() {
-            if self.returns.contains(&i) {
+            if i > 0 && self.stack_pointers.contains(&i) {
                 s.push_str(" | ");
             }
 
@@ -146,6 +147,10 @@ impl Display for Stack {
                         s.push_str(&format!("@{}", k));
                     }
                 }
+            }
+
+            if (i + 1) < self.data.len() {
+                s.push_str(", ");
             }
         }
 
