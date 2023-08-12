@@ -143,7 +143,7 @@ pub fn compile(ast: Expression) -> String {
     let mut template = include_str!("../compile_c_includes/template.c").to_string();
 
     // Debug flag
-    { 
+    {
         unsafe {
             if debug::ENABLED {
                 template = template.replace("/*{DEBUG}*/", "#define DEBUG 1");
@@ -177,7 +177,7 @@ pub fn compile(ast: Expression) -> String {
         }
         names_block.push_str("\t\tdefault:\n\t\t\tfprintf(stderr, \"Undefined name for index %u\", index);\n\t\t\texit(1);\n");
         names_block.push_str("\t}\n}\n");
-        
+
         template = template.replace("/*{NAMES}*/", &names_block);
     }
 
@@ -513,7 +513,7 @@ pub fn compile(ast: Expression) -> String {
         {
             for (i, block) in blocks.iter().enumerate() {
                 // Push the comment for the block
-                // TODO: This is a bit ugly, what if I don't generate the comment any more? 
+                // TODO: This is a bit ugly, what if I don't generate the comment any more?
                 block_block.push('\n');
                 block_block.push_str(block.first().unwrap().trim());
 
