@@ -135,7 +135,7 @@ impl Stack {
 impl Display for Stack {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut s = String::new();
-        s.push_str(" stack<");
+        s.push_str("[");
 
         for (i, value) in self.data.iter().enumerate() {
             if i > 0 && self.stack_pointers.contains(&i) {
@@ -152,12 +152,12 @@ impl Display for Stack {
                 }
             }
 
-            if (i + 1) < self.data.len() {
+            if i + 1 < self.data.len() && !self.stack_pointers.contains(&(i + 1)) {
                 s.push_str(", ");
             }
         }
 
-        s.push_str(">");
+        s.push_str("]");
         write!(f, "{}", s)
     }
 }
