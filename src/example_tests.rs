@@ -55,6 +55,32 @@ mod test {
 
     make_tests!(add2: "examples/add2.stack" => "12\n");
     make_tests!(basic_math: "examples/basic-math.stack" => "98\n");
+    make_tests!(basic_logic: "examples/boolean-ops.stack" => "\
+true and true is true
+true or true is true
+true xor true is false
+true nand true is false
+not true is false
+
+true and false is false
+true or false is true
+true xor false is true
+true nand false is true
+not true is false
+
+false and true is false
+false or true is true
+false xor true is true
+false nand true is true
+not false is true
+
+false and false is false
+false or false is false
+false xor false is false
+false nand false is true
+not false is true
+
+");
     make_tests!(named_variables: "examples/double-named.stack" => "20\n");
     make_tests!(name_2: "examples/name-two.stack" => "3\n");
     make_tests!(arity_in_2: "examples/arity-in-2.stack" => "15\n");
@@ -71,6 +97,28 @@ expect: 7+3i
     );
     make_tests!(loop: "examples/factorial-loop.stack" => "3628800\n");
     make_tests!(if: "examples/if.stack" => "hello\ngoodbye\nhello\ngoodbye\n");
+    make_tests!(when: "examples/when.stack" => "\
+0 is divisible by 3 is divisible by 5
+1
+2
+3 is divisible by 3
+4
+5 is divisible by 5
+6 is divisible by 3
+7
+8
+9 is divisible by 3
+10 is divisible by 5
+11
+12 is divisible by 3
+13
+14
+15 is divisible by 3 is divisible by 5
+16
+17
+18 is divisible by 3
+19
+");
     make_tests!(list: "examples/list.stack" => "[1, 2, 3]\n3\n[1, 2]\n[1, 2, 5]\n2\n");
     make_tests!(lists_of_lists: "examples/lists-of-lists.stack" => "\
 [[1, 2, 3], [4, 5], [7, 8, 9, 0]]

@@ -1,0 +1,9 @@
+{ @[m n] m n % 0 = } @div? 
+
+{ 
+    @n !0
+    n write
+    { !0 " is divisible by 3" write } n 3 div? when
+    { !0 " is divisible by 5" write } n 5 div? when
+    "" writeln
+} 20 loop
