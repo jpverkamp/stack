@@ -17,12 +17,12 @@ digits 1 stack-push!
 
         # If > 10, modulo and carry
         { 
-            @0 !0 
+            !0 
             digits i (digits i stack-ref 10 -) stack-set!
             1 !carry 
         }
         { 
-            @0 !0 
+            !0 
             0 !carry
         }
         digits i stack-ref 10 >= if
@@ -30,10 +30,10 @@ digits 1 stack-push!
 
     # If we have carry left, add a digit
     { 
-        @0 !0 
+        !0 
         digits 1 stack-push!
     }
-    { @0 !0 }
+    { !0 }
     carry 0 > if 
 } @double-digits
 

@@ -3,13 +3,13 @@
 
   [
     # Base case, return 1
-    { @0 !1 n 1 <= } 0
+    { n 1 <= } 0
     
     # If n is even, divide by 2
-    { @0 !1 n 2 % 0 = } { @0 !1 n 2 / collatz-length 1 + }
+    { n 2 % 0 = } { n 2 / collatz-length 1 + }
     
     # Default: If n is odd, multiply by 3 and add 1
-    { @0 !1 n 3 * 1 + collatz-length 1 +}
+    { n 3 * 1 + collatz-length 1 +}
   ] cond
 } @collatz-length
 

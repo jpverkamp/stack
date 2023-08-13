@@ -376,9 +376,7 @@ pub fn compile(ast: Expression) -> String {
                         ));
                     }
                     Expression::Block(ref body) => {
-                        let arity = calculate_arity(&expr).expect(
-                            format!("Unable to calculate arity for block: {:?}", expr).as_str(),
-                        );
+                        let arity = calculate_arity(&expr);
                         let index = compile_block(arity, body, blocks);
                         lines.push(format!(
                             "

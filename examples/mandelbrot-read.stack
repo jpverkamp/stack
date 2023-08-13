@@ -74,7 +74,7 @@ height writeln
         # Calculate the number of iterations for the current complex number
         real imag max_iterations mandelbrot @iterations
 
-        { @0 !0 "0 0 0 " write }
+        { !0 "0 0 0 " write }
         {
           @0 !0
 

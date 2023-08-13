@@ -11,13 +11,13 @@ cache 1 1 hash-set!
 
   [
     # Already cached
-    { @0 !1 cache n hash-has? } { @0 !1 cache n hash-get }
+    { cache n hash-has? } { cache n hash-get }
     
     # If n is even, divide by 2
-    { @0 !1 n 2 % 0 = } { @0 !1 n 2 / collatz-length 1 + }
+    { n 2 % 0 = } { n 2 / collatz-length 1 + }
     
     # Default: If n is odd, multiply by 3 and add 1
-    { @0 !1 n 3 * 1 + collatz-length 1 +}
+    { n 3 * 1 + collatz-length 1 +}
   ] cond
   @l
 
@@ -50,7 +50,7 @@ results "best-l" 1 hash-set!
     " -> " write
     l writeln
   } 
-  { @0 !0 }
+  { !0 }
   l best-l > if
 } bound loop
 

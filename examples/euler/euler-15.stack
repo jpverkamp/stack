@@ -22,14 +22,14 @@
 
         # ways to get to a given point
         x y
-        { @0 !1 x 1 - y cache-get } { @0 !1 0 } x 0 > if
-        { @0 !1 x y 1 - cache-get } { @0 !1 0 } y 0 > if
+        { x 1 - y cache-get } { 0 } x 0 > if
+        { x y 1 - cache-get } { 0 } y 0 > if
         +
         cache-set!
 
         # default for the initial point
-        { @0 !0 0 0 1 cache-set! }
-        { @0 !0 }
+        { !0 0 0 1 cache-set! }
+        { !0 }
         x y + 0 = if 
 
 

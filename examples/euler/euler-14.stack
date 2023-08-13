@@ -9,13 +9,13 @@ cache 1 1 hash-set!
 {
   @n
   # Already cached 
-  { @0 !1 cache n hash-get }
+  { cache n hash-get }
   # New value
   {
     @0 !1
     # Calculate next Collatz value m
-    { @0 !1 n 2 / }
-    { @0 !1 n 3 * 1 + }
+    { n 2 / }
+    { n 3 * 1 + }
     n 2 % 0 = if
     @m
     
@@ -50,7 +50,7 @@ cache 1 1 hash-set!
     " -> " write
     l writeln
   } 
-  { @0 !0 }
+  { !0 }
   l best-l > if
 } bound loop
 

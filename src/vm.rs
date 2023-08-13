@@ -579,7 +579,7 @@ impl VM {
             Expression::Literal(value) => self.stack.push(value.clone()),
             // Blocks are parsed into block values, arity is calculated here
             Expression::Block(children) => {
-                let (arity_in, arity_out) = calculate_arity(&ast.clone()).unwrap();
+                let (arity_in, arity_out) = calculate_arity(&ast.clone());
 
                 // TODO: Actually calculate arity
                 self.stack.push(Value::Block {
