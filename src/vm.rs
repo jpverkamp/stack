@@ -91,6 +91,76 @@ impl VM {
                     "=" => comparison_binop!(self.stack, |a, b| { a == b }),
                     ">=" => comparison_binop!(self.stack, |a, b| { a >= b }),
                     ">" => comparison_binop!(self.stack, |a, b| { a > b }),
+                    // Logical operators
+                    "and" => {
+                        let b = self.stack.pop().unwrap();
+                        let a = self.stack.pop().unwrap();
+
+                        match (a.clone(), b.clone()) {
+                            (Value::Boolean(a), Value::Boolean(b)) => {
+                                self.stack.push(Value::Boolean(a && b));
+                            }
+                            _ => panic!(
+                                "cannot perform logical operation on non-boolean values, got {} and {}",
+                                a, b
+                            ),
+                        };
+                    }
+                    "or" => {
+                        let b = self.stack.pop().unwrap();
+                        let a = self.stack.pop().unwrap();
+
+                        match (a.clone(), b.clone()) {
+                            (Value::Boolean(a), Value::Boolean(b)) => {
+                                self.stack.push(Value::Boolean(a || b));
+                            }
+                            _ => panic!(
+                                "cannot perform logical operation on non-boolean values, got {} and {}",
+                                a, b
+                            ),
+                        };
+                    }
+                    "xor" => {
+                        let b = self.stack.pop().unwrap();
+                        let a = self.stack.pop().unwrap();
+
+                        match (a.clone(), b.clone()) {
+                            (Value::Boolean(a), Value::Boolean(b)) => {
+                                self.stack.push(Value::Boolean(a && !b || !a && b));
+                            }
+                            _ => panic!(
+                                "cannot perform logical operation on non-boolean values, got {} and {}",
+                                a, b
+                            ),
+                        };
+                    }
+                    "nand" => {
+                        let b = self.stack.pop().unwrap();
+                        let a = self.stack.pop().unwrap();
+
+                        match (a.clone(), b.clone()) {
+                            (Value::Boolean(a), Value::Boolean(b)) => {
+                                self.stack.push(Value::Boolean(!(a && b)));
+                            }
+                            _ => panic!(
+                                "cannot perform logical operation on non-boolean values, got {} and {}",
+                                a, b
+                            ),
+                        };
+                    }
+                    "not" => {
+                        let a = self.stack.pop().unwrap();
+
+                        match a.clone() {
+                            Value::Boolean(a) => {
+                                self.stack.push(Value::Boolean(!a));
+                            }
+                            _ => panic!(
+                                "cannot perform logical operation on non-boolean values, got {}",
+                                a
+                            ),
+                        };
+                    }
                     // Convert a value to an int if possible
                     "to_int" => {
                         let value = self.stack.pop().unwrap();

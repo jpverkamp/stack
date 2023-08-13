@@ -263,6 +263,21 @@ pub fn compile(ast: Expression) -> String {
                             ">" => numeric_compare!(lines, ">"),
 
                             // Built ins
+                            "and" => lines.push(
+                                include_str!("../compile_c_includes/builtins/and.c").to_string(),
+                            ),
+                            "or" => lines.push(
+                                include_str!("../compile_c_includes/builtins/or.c").to_string(),
+                            ),
+                            "xor" => lines.push(
+                                include_str!("../compile_c_includes/builtins/xor.c").to_string(),
+                            ),
+                            "nand" => lines.push(
+                                include_str!("../compile_c_includes/builtins/nand.c").to_string(),
+                            ),
+                            "not" => lines.push(
+                                include_str!("../compile_c_includes/builtins/not.c").to_string(),
+                            ),
                             "read" => lines.push(
                                 include_str!("../compile_c_includes/builtins/read.c").to_string(),
                             ),
@@ -284,7 +299,7 @@ pub fn compile(ast: Expression) -> String {
                                 include_str!("../compile_c_includes/builtins/if.c").to_string(),
                             ),
                             "when" => lines.push(
-                                include_str!("../compile_c_includes/builtins/if.c").to_string(),
+                                include_str!("../compile_c_includes/builtins/when.c").to_string(),
                             ),
                             "cond" => lines.push(
                                 include_str!("../compile_c_includes/builtins/cond.c").to_string(),

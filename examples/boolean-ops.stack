@@ -1,0 +1,14 @@
+{ 
+    @[a b]
+    a write " and " write b write " is " write a b and writeln
+    a write " or " write b write " is " write a b or writeln
+    a write " xor " write b write " is " write a b xor writeln
+    a write " nand " write b write " is " write a b nand writeln
+    "not " write a write " is " write a not writeln
+    "" writeln
+} @test
+
+true true test
+true false test
+false true test
+false false test
