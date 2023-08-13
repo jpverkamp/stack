@@ -1,0 +1,51 @@
+13195 @bound
+# 600851475143 @bound
+
+# If n evenly divides m
+{ @[m n] m n % 0 = } @div? 
+
+# Find the first divisor of n (> 1)
+# If n is prime, return n
+{ 
+    @n
+    
+    { 
+        @i
+        i
+        { i 1 + iter }
+        n i div? if
+    } @iter
+
+    2 iter
+} @first-factor
+
+# Return prime factors of n
+# If n is prime, return [n]
+{ 
+    @n
+    make-stack @factors 
+
+    { 
+        !0
+
+        n first-factor @m
+
+        "n: " n write ", found: " write m writeln
+        factors m stack-push!
+
+        { 
+            !0
+            n m / !n
+            iter
+        } m n < when
+
+    } @iter
+    iter
+
+    factors
+} @factorize
+
+bound factorize @factors 
+
+factors writeln
+factors stack-pop! writeln
