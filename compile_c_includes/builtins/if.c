@@ -3,11 +3,7 @@
     Value if_false = *(stack_ptr--);
     Value if_true = *(stack_ptr--);
 
-    if (cond.type != TAG_BOOLEAN)
-    {
-        fprintf(stderr, "Error: if condition must be a boolean\n");
-        exit(1);
-    }
+    assert_type("if", "boolean", TAG_BOOLEAN, &cond, names);
 
     Value v = (cond.as_boolean ? if_true : if_false);
 
