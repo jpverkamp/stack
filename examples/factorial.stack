@@ -1,7 +1,7 @@
 {
   @n
   1
-  { @0 n 1 - fact n * }
+  { n 1 - fact n * }
   n 1 < if
 } @fact
 

@@ -1,14 +1,14 @@
 {
     @n
     true
-    { @0 n 1 - odd? } 
+    { n 1 - odd? } 
     n 0 = if
 } @even?
 
 {
     @n
     false
-    { @0 n 1 - even? } 
+    { n 1 - even? } 
     n 0 = if
 } @odd?
 

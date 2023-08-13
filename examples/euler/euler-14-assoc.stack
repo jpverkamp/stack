@@ -12,17 +12,15 @@ make-stack @cache
 } @cache-add!
 
 { 
-  @key !1
+  @key
   -1 @result
 
   { 
     @n !0
 
     # If the cache[n] = key, cache[n+1] = value
-    { 
-      !0 cache n 2 * 1 + stack-ref !result }
-    { !0 }
-    cache n 2 * stack-ref key = if
+    { !0 cache n 2 * 1 + stack-ref !result }
+    cache n 2 * stack-ref key = when
   } cache stack-size 2 / loop
 
   result
@@ -40,7 +38,7 @@ make-stack @cache
   value
   # We don't, calculate, cache, and return
   { 
-    @0 !1
+    
 
     { n 2 / collatz-length 1 + }    # If n is even, divide by 2
     { n 3 * 1 + collatz-length 1 +} # If n is odd, multiply by 3 and add 1
@@ -63,7 +61,7 @@ make-stack @cache
   v collatz-length @l
 
   {
-    @0 !0
+    !0
     v !best-v
     l !best-l
 
@@ -74,8 +72,7 @@ make-stack @cache
     ", cache size is " write
     cache stack-size writeln
   } 
-  { !0 }
-  l best-l > if
+  l best-l > when
 } bound loop
 
 best-v writeln

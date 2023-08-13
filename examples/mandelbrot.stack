@@ -38,10 +38,8 @@ max_imag min_imag - height / @imag_step
     
     0
     {
-      @0 !1
       i
       { 
-        @0 !1
         zx zy zx zy cmul px py cadd
         i 1 +
         $iter iter

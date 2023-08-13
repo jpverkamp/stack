@@ -13,15 +13,11 @@ cache 1 stack-push!
   # Extend the cache if needed
   n cache stack-size - 2 + @extension
   { 
-    @0 !0
-    { 
-      @0 !0
-      cache 0 stack-push! 
-    } extension loop 
+    !0
+    { !0 cache 0 stack-push! } extension loop 
     "extended cache by " write extension write " to " write n writeln
   }
-  { !0 }
-  extension 0 > if
+  extension 0 > when
 
   [
     # Already cached
@@ -53,7 +49,7 @@ cache 1 stack-push!
   v collatz-length @l
 
   {
-    @0 !0
+    !0
     v !best-v
     l !best-l
 
@@ -62,8 +58,7 @@ cache 1 stack-push!
     " -> " write
     l writeln
   } 
-  { !0 }
-  l best-l > if
+  l best-l > when
 } bound loop
 
 best-v writeln

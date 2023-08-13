@@ -12,7 +12,6 @@ cache 1 1 hash-set!
   { cache n hash-get }
   # New value
   {
-    @0 !1
     # Calculate next Collatz value m
     { n 2 / }
     { n 3 * 1 + }
@@ -41,7 +40,7 @@ cache 1 1 hash-set!
   v collatz-length @l
   
   {
-    @0 !0
+    !0
     v !best-v
     l !best-l
 
@@ -50,8 +49,7 @@ cache 1 1 hash-set!
     " -> " write
     l writeln
   } 
-  { !0 }
-  l best-l > if
+  l best-l > when
 } bound loop
 
 best-v writeln

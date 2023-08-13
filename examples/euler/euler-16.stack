@@ -4,7 +4,7 @@ make-stack @digits
 digits 1 stack-push!
 
 { 
-    @0 !0
+    !0
 
     0 @carry
 
@@ -33,8 +33,7 @@ digits 1 stack-push!
         !0 
         digits 1 stack-push!
     }
-    { !0 }
-    carry 0 > if 
+    carry 0 > when
 } @double-digits
 
 # Double #iterations times

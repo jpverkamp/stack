@@ -41,7 +41,7 @@ results "best-l" 1 hash-set!
   v collatz-length @l
 
   {
-    @0 !0
+    !0
     v !best-v
     l !best-l
 
@@ -50,8 +50,7 @@ results "best-l" 1 hash-set!
     " -> " write
     l writeln
   } 
-  { !0 }
-  l best-l > if
+  l best-l > when
 } bound loop
 
 best-v writeln
