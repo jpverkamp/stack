@@ -283,6 +283,9 @@ pub fn compile(ast: Expression) -> String {
                             "if" => lines.push(
                                 include_str!("../compile_c_includes/builtins/if.c").to_string(),
                             ),
+                            "when" => lines.push(
+                                include_str!("../compile_c_includes/builtins/if.c").to_string(),
+                            ),
                             "cond" => lines.push(
                                 include_str!("../compile_c_includes/builtins/cond.c").to_string(),
                             ),

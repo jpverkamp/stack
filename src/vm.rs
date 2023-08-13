@@ -295,6 +295,33 @@ impl VM {
                             }
                         }
                     }
+                    // One armed if statement, primarily used for side effect
+                    "when" => {
+                        let condition = self.stack.pop().unwrap();
+                        let branch = self.stack.pop().unwrap();
+
+                        match condition {
+                            Value::Boolean(value) => {
+                                if value {
+                                    match branch {
+                                        // Blocks get evaluated lazily (now)
+                                        Value::Block {
+                                            arity_in,
+                                            arity_out,
+                                            expression,
+                                        } => {
+                                            self.evaluate_block(arity_in, expression, arity_out);
+                                        }
+                                        // All literal values just get directly pushed
+                                        _ => {
+                                            self.stack.push(branch);
+                                        }
+                                    }
+                                }
+                            }
+                            _ => panic!("when condition must be a boolean, got {}", condition),
+                        };
+                    }
                     // Cond statements are like if statements, but with multiple branches
                     // They expect only an odd numbered list of blocks as input:
                     // [ test1 value1 test2 value2 ... default ]
