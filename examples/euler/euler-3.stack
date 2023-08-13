@@ -1,5 +1,4 @@
-13195 @bound
-# 600851475143 @bound
+600851475143 @bound
 
 # If n evenly divides m
 { @[m n] m n % 0 = } @div? 
@@ -30,7 +29,6 @@
 
         n first-factor @m
 
-        "n: " n write ", found: " write m writeln
         factors m stack-push!
 
         { 
@@ -45,7 +43,4 @@
     factors
 } @factorize
 
-bound factorize @factors 
-
-factors writeln
-factors stack-pop! writeln
+bound factorize stack-pop! writeln
