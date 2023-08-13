@@ -3,7 +3,7 @@
 
 1000000 @bound
 
-make-list @cache
+make-stack @cache
 cache 1 stack-push! 
 cache 1 stack-push! 
 

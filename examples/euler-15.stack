@@ -1,0 +1,39 @@
+20 @size
+
+{ 
+    @n !1
+    { @n !1 -1 } size 1 + generate-stack
+} size 1 + generate-stack @cache
+
+{ 
+    @[x y] !1
+    cache x stack-ref y stack-ref
+} @cache-get
+
+{ 
+    @[x y v] !0
+    cache x stack-ref y v stack-set!
+} @cache-set!
+
+{ 
+    @x !0
+    { 
+        @y !0
+
+        # ways to get to a given point
+        x y
+        { @0 !1 x 1 - y cache-get } { @0 !1 0 } x 0 > if
+        { @0 !1 x y 1 - cache-get } { @0 !1 0 } y 0 > if
+        +
+        cache-set!
+
+        # default for the initial point
+        { @0 !0 0 0 1 cache-set! }
+        { @0 !0 }
+        x y + 0 = if 
+
+
+    } size 1 + loop
+} size 1 + loop
+
+size size cache-get writeln

@@ -1,0 +1,51 @@
+1000 @iterations
+
+make-stack @digits
+digits 1 stack-push!
+
+{ 
+    @0 !0
+
+    0 @carry
+
+    # For each digit
+    { 
+        @i !0
+
+        # Update
+        digits i (digits i stack-ref 2 *) carry + stack-set!
+
+        # If > 10, modulo and carry
+        { 
+            @0 !0 
+            digits i (digits i stack-ref 10 -) stack-set!
+            1 !carry 
+        }
+        { 
+            @0 !0 
+            0 !carry
+        }
+        digits i stack-ref 10 >= if
+    } digits stack-size loop
+
+    # If we have carry left, add a digit
+    { 
+        @0 !0 
+        digits 1 stack-push!
+    }
+    { @0 !0 }
+    carry 0 > if 
+} @double-digits
+
+# Double #iterations times
+{ 
+    @i !0 
+    double-digits
+} iterations loop
+
+# Sum digits
+0 @sum
+{ 
+    @i !0 
+    digits i stack-ref sum + !sum
+} digits stack-size loop writeln

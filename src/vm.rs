@@ -377,7 +377,7 @@ impl VM {
                         }
                     }
                     // List (vector) implementation
-                    "make-list" => {
+                    "make-stack" => {
                         let list = Value::Stack(Rc::new(RefCell::new(vec![])));
                         self.stack.push(list);
                     }
