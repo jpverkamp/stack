@@ -80,6 +80,8 @@ pub fn calculate_arity(expression: &Expression) -> (usize, usize) {
                 }
             }
 
+            log::debug!("calculate_arity({expression}) is ({arity_in}, {arity_out})");
+
             (arity_in, arity_out)
         }
         Expression::List(_) => panic!("Cannot calculate the arity of a list: {}", expression),

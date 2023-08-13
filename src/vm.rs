@@ -32,7 +32,7 @@ impl VM {
     /// This does not actually return anything, but instead mutates the self.stack
     #[allow(dead_code)]
     pub fn evaluate(&mut self, ast: Expression) {
-        log::debug!("evaluate({})", ast);
+        log::debug!("evaluate({}) on {}", ast, self.stack);
 
         /// A helper macro to generate functions that operate on two integers and floats
         macro_rules! numeric_binop {
@@ -590,7 +590,7 @@ impl VM {
                             {
                                 self.evaluate_block(arity_in, expression, arity_out);
                             } else {
-                                self.stack.push(value);
+                                self.stack.push(value.clone());
                             }
                         } else {
                             panic!("Unknown identifier {:?}", name);
