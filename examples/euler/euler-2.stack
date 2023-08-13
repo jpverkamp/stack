@@ -1,0 +1,21 @@
+4000000 @bound
+
+0 1 1 @[sum a b]
+
+{ 
+    !0
+
+    # Add even numbers to sum
+    { !0 sum a + !sum } a 2 % 0 = when
+
+    # Update a, b and recur if we're not out of bounds
+    { 
+        !0 
+        b (a b +) !b !a
+        go
+    } b bound < when
+} @go
+
+go
+
+sum writeln

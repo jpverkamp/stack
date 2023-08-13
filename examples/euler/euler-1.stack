@@ -1,0 +1,15 @@
+1000 @bound
+
+0 @sum
+{ 
+    @n
+
+    { !0 sum n + !sum }
+    [
+        { n 3 % 0 = } true
+        { n 5 % 0 = } true
+        false
+    ] cond when
+} bound loop 
+
+sum writeln 
