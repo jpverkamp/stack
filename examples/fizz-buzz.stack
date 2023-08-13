@@ -1,0 +1,13 @@
+{ @[m n] m n % 0 = } @div? 
+
+{ 
+    @n !0 
+    n 1 + !n
+
+    [
+        { n 3 div? n 5 div? and } "fizzbuzz"
+        { n 3 div? } "fizz"
+        { n 5 div? } "buzz"
+        n
+    ] cond writeln
+} 100 loop
