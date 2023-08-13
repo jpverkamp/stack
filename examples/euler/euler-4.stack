@@ -1,0 +1,60 @@
+1000 @bound
+
+{ 
+    @n
+    make-stack @digits
+
+    { 
+        !0 
+        { 
+            !0
+            digits n 10 % stack-push!
+            n 10 / !n
+            iter
+        } n 0 > when
+    } @iter
+    iter
+
+    digits
+} @digits
+
+{ 
+    @s
+    
+    {
+        @i
+        s (s stack-size i - 1 -) stack-ref 
+    } s stack-size generate-stack
+} @reversed
+
+{ 
+    @s
+    
+    false @diff
+
+    {
+        @i !0
+
+        s i stack-ref 
+        s (s stack-size i - 1 -) stack-ref 
+        = not
+        diff or !diff
+    } s stack-size loop
+
+    diff not
+} @palindrome? 
+
+0 @largest
+
+{ 
+    @m !0
+    { 
+        @n !0
+
+        m n * @p
+        { !0 p !largest }
+        p digits palindrome? p largest > and when 
+    } bound loop
+} bound loop
+
+largest writeln
