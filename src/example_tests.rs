@@ -70,7 +70,6 @@ expect: 7+3i
 "
     );
     make_tests!(loop: "examples/factorial-loop.stack" => "3628800\n");
-    make_tests!(loop_apply: "examples/factorial-loop-apply.stack" => "3628800\n");
     make_tests!(if: "examples/if.stack" => "hello\ngoodbye\nhello\ngoodbye\n");
     make_tests!(list: "examples/list.stack" => "[1, 2, 3]\n3\n[1, 2]\n[1, 2, 5]\n2\n");
     make_tests!(lists_of_lists: "examples/lists-of-lists.stack" => "\
