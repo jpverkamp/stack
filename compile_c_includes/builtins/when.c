@@ -2,11 +2,8 @@
     Value cond = *(stack_ptr--);
     Value block = *(stack_ptr--);
 
-    if (cond.type != TAG_BOOLEAN)
-    {
-        fprintf(stderr, "Error: if condition must be a boolean\n");
-        exit(1);
-    }
+    assert_type("when", "boolean", TAG_BOOLEAN, cond, names);
+    assert_type("when", "block", TAG_BLOCK, block, names);
 
     if (cond.as_boolean)
     {

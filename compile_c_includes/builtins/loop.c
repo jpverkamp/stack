@@ -2,11 +2,7 @@
     Value iter = *(stack_ptr--);
     Value block = *(stack_ptr--);
 
-    if (block.type != TAG_BLOCK)
-    {
-        printf("Error: loop block must be a block\n");
-        exit(1);
-    }
+    assert_type("loop", "block", TAG_BLOCK, &block, names);
 
     if (iter.type == TAG_NUMBER_INTEGER)
     {
