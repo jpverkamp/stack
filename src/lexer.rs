@@ -13,6 +13,7 @@ pub fn tokenize(reader: impl BufRead) -> Vec<Token> {
     let token_patterns = vec![
         // single characters
         r"[\{}()\[\]]",
+        
         // <numbers>
         // complex numbers
         r"-?\d+(\.\d*)?[+-]-?\d+(\.\d*)?i",
