@@ -316,7 +316,8 @@ pub fn compile(ast: Expression) -> String {
                                     .to_string(),
                             ),
                             "generate-stack" => lines.push(
-                                include_str!("../compile_c_includes/builtins/stack-generate.c").to_string(),
+                                include_str!("../compile_c_includes/builtins/stack-generate.c")
+                                    .to_string(),
                             ),
                             "stack-ref" => lines.push(
                                 include_str!("../compile_c_includes/builtins/stack-ref.c")

@@ -88,15 +88,24 @@ pub fn calculate_arity(expression: &Expression) -> (usize, usize) {
         Expression::Group(_) => panic!("Cannot calculate the arity of a group: {}", expression),
         Expression::At(body) => match body.as_ref() {
             Expression::Identifier(_) => (0, 1),
-            _ => panic!("Cannot calculate the arity of a non-named @ expression: {}", expression),
+            _ => panic!(
+                "Cannot calculate the arity of a non-named @ expression: {}",
+                expression
+            ),
         },
         Expression::Bang(body) => match body.as_ref() {
             Expression::Identifier(_) => (1, 0),
-            _ => panic!("Cannot calculate the arity of a non-named ! expression: {}", expression),
+            _ => panic!(
+                "Cannot calculate the arity of a non-named ! expression: {}",
+                expression
+            ),
         },
         Expression::Dollar(body) => match body.as_ref() {
             Expression::Identifier(_) => (0, 1),
-            _ => panic!("Cannot calculate the arity of a non-named $ expression: {}", expression),
+            _ => panic!(
+                "Cannot calculate the arity of a non-named $ expression: {}",
+                expression
+            ),
         },
     }
 }
